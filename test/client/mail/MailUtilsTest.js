@@ -4,15 +4,14 @@ import {GroupType} from "../../../src/api/common/TutanotaConstants"
 import {createRecipientInfo, parseMailtoUrl} from "../../../src/mail/MailUtils"
 import {LoginControllerImpl, logins} from "../../../src/api/main/LoginController"
 import {recipientInfoType} from "../../../src/api/common/RecipientInfo"
-import {UserController} from "../../../src/api/main/UserController"
 import {downcast} from "../../../src/api/common/utils/Utils"
-import type {LoginController} from "../../../src/api/main/LoginController"
 
 
 o.spec("MailUtils", browser(function () {
 
 	o.before(function () {
-		downcast<LoginControllerImpl>(logins)._userController = ({
+		const loginController: LoginControllerImpl = downcast(logins)
+		loginController._userController = ({
 			user: {
 				_id: 'userId',
 				memberships: [{groupType: GroupType.Contact, group: 'groupId'}]

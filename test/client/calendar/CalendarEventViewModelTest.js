@@ -142,8 +142,8 @@ o.spec("CalendarEventViewModel", function () {
 		o(viewModel.readOnly).equals(false)
 		o(viewModel.canModifyGuests()).equals(false)
 		o(viewModel.canModifyOwnAttendance()).equals(false)
-		o(viewModel.canModifyOrganizer()).equals(false)
-		o(viewModel.possibleOrganizers).deepEquals([existingEvent.organizer])
+		o(viewModel.canModifyOrganizer()).equals(true)
+		o(viewModel.possibleOrganizers).deepEquals([existingEvent.organizer, mailAddress])
 	})
 
 	o("invite in writable calendar", function () {
@@ -765,6 +765,122 @@ o.spec("CalendarEventViewModel", function () {
 					status: CalendarAttendeeStatus.TENTATIVE
 				})
 			])
+		})
+	})
+
+	o.spec("canModifyOrganizer", function () {
+		o("can modify when when new event and no guests", function () {
+			const calendars = makeCalendars("own")
+			const viewModel = init({calendars, existingEvent: null})
+			o(viewModel.canModifyOrganizer()).equals(true)
+		})
+
+		o("can modify when when new own event and added guests", function () {
+			const calendars = makeCalendars("own")
+			const viewModel = init({calendars, existingEvent: null})
+			viewModel.addAttendee("guest@example.com")
+			o(viewModel.canModifyOrganizer()).equals(true)
+		})
+
+		o("can modify when own event and no guests", function () {
+			const calendars = makeCalendars("own")
+			const viewModel = init({
+				calendars,
+				existingEvent: createCalendarEvent({
+					_id: ["listId", "calendarId"],
+					_ownerGroup: calendarGroupId,
+				})
+			})
+			o(viewModel.canModifyOrganizer()).equals(true)
+		})
+
+		o("can modify when own event without guests and added guests", function () {
+			const calendars = makeCalendars("own")
+			const viewModel = init({
+				calendars,
+				existingEvent: createCalendarEvent({
+					_id: ["listId", "calendarId"],
+					_ownerGroup: calendarGroupId,
+				})
+			})
+
+			viewModel.addAttendee("guest@tutanota.de")
+
+			o(viewModel.canModifyOrganizer()).equals(true)
+		})
+
+		o("cannot modify in own calendar when there were guests", function () {
+			const calendars = makeCalendars("own")
+			const viewModel = init({
+				calendars,
+				existingEvent: createCalendarEvent({
+					_id: ["listId", "calendarId"],
+					_ownerGroup: calendarGroupId,
+					attendees: [createCalendarEventAttendee({address: createEncryptedMailAddress({address: "guest@tutanota.com"})})]
+				})
+			})
+
+			o(viewModel.canModifyOrganizer()).equals(false)
+		})
+
+		o("cannot modify in own calendar when there were guests and they were removed", function () {
+			const calendars = makeCalendars("own")
+			const guestAddress = "guest@tutanota.com"
+			const viewModel = init({
+				calendars,
+				existingEvent: createCalendarEvent({
+					_id: ["listId", "calendarId"],
+					_ownerGroup: calendarGroupId,
+					attendees: [createCalendarEventAttendee({address: createEncryptedMailAddress({address: guestAddress})})]
+				})
+			})
+
+			viewModel.removeAttendee(guestAddress)
+
+			o(viewModel.canModifyOrganizer()).equals(false)
+		})
+
+		o("cannot modify in ro shared calendar without guests", function () {
+			const calendars = makeCalendars("shared")
+			const viewModel = init({
+				calendars,
+				existingEvent: createCalendarEvent({
+					_id: ["listId", "calendarId"],
+					_ownerGroup: calendarGroupId,
+				})
+			})
+
+			o(viewModel.canModifyOrganizer()).equals(false)
+		})
+
+		o("can modify in rw shared calendar without guests", function () {
+			const calendars = makeCalendars("shared")
+			const userController = makeUserController()
+			addCapability(userController.user, calendarGroupId, ShareCapability.Write)
+			const viewModel = init({
+				calendars,
+				userController,
+				existingEvent: createCalendarEvent({
+					_id: ["listId", "calendarId"],
+					_ownerGroup: calendarGroupId,
+				})
+			})
+
+			o(viewModel.canModifyOrganizer()).equals(true)
+		})
+
+		o("cannot modify when it's invite in own calendar", function () {
+			const calendars = makeCalendars("own")
+			const viewModel = init({
+				calendars,
+				existingEvent: createCalendarEvent({
+					_id: ["listId", "calendarId"],
+					_ownerGroup: calendarGroupId,
+					isCopy: true,
+				})
+			})
+
+			o(viewModel.canModifyOrganizer()).equals(false)
 		})
 	})
 })

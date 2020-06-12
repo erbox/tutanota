@@ -172,7 +172,9 @@ export class CalendarEventViewModel {
 
 		this.possibleOrganizers = existingOrganizer && !this.canModifyOrganizer()
 			? [existingOrganizer]
-			: this._mailAddresses
+			: existingOrganizer && !this._mailAddresses.includes(existingOrganizer)
+				? [existingOrganizer].concat(this._mailAddresses)
+				: this._mailAddresses
 
 		if (existingEvent) {
 			this.summary(existingEvent.summary)
@@ -376,9 +378,8 @@ export class CalendarEventViewModel {
 	}
 
 	canModifyOrganizer(): boolean {
-		return (this._eventType === EventType.OWN || this._eventType === EventType.INVITE)
-			&& (!this.existingEvent || !this.existingEvent.isCopy)
-			&& this.attendees.length === 0
+		return this._eventType !== EventType.SHARED_RO
+			&& (!this.existingEvent || (!this.existingEvent.isCopy && this.existingEvent.attendees.length === 0))
 	}
 
 	canModifyAlarms(): boolean {
