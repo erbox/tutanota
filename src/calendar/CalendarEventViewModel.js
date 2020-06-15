@@ -410,8 +410,10 @@ export class CalendarEventViewModel {
 	deleteEvent(): Promise<bool> {
 		const event = this.existingEvent
 		if (event) {
+ 			const updatedEvent = clone(event)
+			updatedEvent.sequence = incrementSequence(updatedEvent.sequence)
 			const awaitCancellation = this._eventType === EventType.OWN && event.attendees.length
-				? this._distributor.sendCancellation(event, event.attendees
+				? this._distributor.sendCancellation(updatedEvent, event.attendees
 				                                                 .filter(a => !this._mailAddresses.includes(a.address.address))
 				                                                 .map(a => a.address))
 				: Promise.resolve()
@@ -615,4 +617,9 @@ function createCalendarAlarm(identifier: string, trigger: string): AlarmInfo {
 	calendarAlarmInfo.alarmIdentifier = identifier
 	calendarAlarmInfo.trigger = trigger
 	return calendarAlarmInfo
+}
+
+function incrementSequence(sequence: string): string {
+	const current = filterInt(sequence) || 0
+	return String(current + 1)
 }

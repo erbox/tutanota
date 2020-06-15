@@ -216,12 +216,22 @@ o.spec("CalendarEventViewModel", function () {
 				_id: ["listid", "calendarid"],
 				_ownerGroup: calendarGroupId,
 				organizer: mailAddress,
-				attendees: [ownAttendee, attendee]
+				attendees: [ownAttendee, attendee],
+				sequence: "1",
+			})
+			const newEvent = createCalendarEvent({
+				_id: ["listid", "calendarid"],
+				_ownerGroup: calendarGroupId,
+				organizer: mailAddress,
+				attendees: [ownAttendee, attendee],
+				sequence: "2",
 			})
 			const viewModel = init({calendars, existingEvent, calendarModel, distributor})
+
 			await viewModel.deleteEvent()
+
 			o(calendarModel.deleteEvent.calls.map(c => c.args)).deepEquals([[existingEvent]])
-			o(distributor.sendCancellation.calls.map(c => c.args)).deepEquals([[existingEvent, [attendee.address]]])
+			o(distributor.sendCancellation.calls.map(c => c.args)).deepEquals([[newEvent, [attendee.address]]])
 		})
 
 		o("own event without attendees in own calendar", async function () {
@@ -657,7 +667,7 @@ o.spec("CalendarEventViewModel", function () {
 
 			o(viewModel.attendees).deepEquals([
 				createCalendarEventAttendee({
-				 	address: createEncryptedMailAddress({address: mailAddress}),
+					address: createEncryptedMailAddress({address: mailAddress}),
 					status: CalendarAttendeeStatus.ACCEPTED,
 				}),
 				createCalendarEventAttendee({
