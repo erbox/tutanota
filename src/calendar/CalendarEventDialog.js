@@ -365,7 +365,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 							class: "mb",
 						}, renderTwoColumnsIfFits(
 						m(".flex-grow", [
-							renderGoingSelector(),
+							viewModel.existingEvent ? renderGoingSelector() : null,
 							renderOrganizer(),
 						]),
 						m(".flex-grow", [

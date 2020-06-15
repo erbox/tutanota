@@ -253,6 +253,9 @@ export class CalendarEventViewModel {
 			address: createEncryptedMailAddress({address: mailAddress}),
 		})
 		this.attendees.push(attendee)
+		if (this.attendees.length === 1 && this._findOwnAttendee() == null) {
+			this.selectGoing(CalendarAttendeeStatus.ACCEPTED)
+		}
 	}
 
 	_adjustEndTime() {

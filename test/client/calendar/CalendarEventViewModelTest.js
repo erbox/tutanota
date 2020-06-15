@@ -656,6 +656,10 @@ o.spec("CalendarEventViewModel", function () {
 
 			o(viewModel.attendees).deepEquals([
 				createCalendarEventAttendee({
+				 	address: createEncryptedMailAddress({address: mailAddress}),
+					status: CalendarAttendeeStatus.ACCEPTED,
+				}),
+				createCalendarEventAttendee({
 					address: createEncryptedMailAddress({address: newGuest}),
 					status: CalendarAttendeeStatus.NEEDS_ACTION,
 				})
@@ -671,6 +675,10 @@ o.spec("CalendarEventViewModel", function () {
 			viewModel.addAttendee(newGuest)
 
 			o(viewModel.attendees).deepEquals([
+				createCalendarEventAttendee({
+					address: createEncryptedMailAddress({address: mailAddress}),
+					status: CalendarAttendeeStatus.ACCEPTED,
+				}),
 				createCalendarEventAttendee({
 					address: createEncryptedMailAddress({address: newGuest}),
 					status: CalendarAttendeeStatus.NEEDS_ACTION,
@@ -689,6 +697,10 @@ o.spec("CalendarEventViewModel", function () {
 			viewModel.addAttendee(guest)
 
 			o(viewModel.attendees).deepEquals([
+				createCalendarEventAttendee({
+					address: createEncryptedMailAddress({address: mailAddress}),
+					status: CalendarAttendeeStatus.ACCEPTED,
+				}),
 				createCalendarEventAttendee({
 					address: createEncryptedMailAddress({address: guest}),
 					status: CalendarAttendeeStatus.NEEDS_ACTION,
