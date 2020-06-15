@@ -1109,6 +1109,7 @@ export type TranslationKeyType =
 	| "who_label"
 	| "when_label"
 	| "awaiting_label"
+	| "guest_label"
 	| "guests_label"
 	| "attendingEvent_label"
 	| "eventCopy_msg"

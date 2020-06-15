@@ -151,25 +151,30 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 				}, iconElement)
 			}
 
-			const renderGuest = a => m(".flex.mr-negative-s", [
-				m(".flex.flex-grow.items-center", {
-						style: {
-							height: px(size.button_height),
-						},
-					},
-					[renderStatusIcon(a), m("div", a.address.name ? `${a.address.name} ${a.address.address}` : a.address.address)]
-				),
+			const renderGuest = a => m(".flex.mt", {
+				style: {height: px(size.button_height), borderBottom: "1px transparent"},
+			}, [
+				m(".flex.col.flex-grow", [
+					m(".small", lang.get(a.address.address === viewModel.organizer ? "organizer_label" : "guest_label")),
+					m(".flex.flex-grow.items-center",
+						[
+							renderStatusIcon(a),
+							m("div", {style: {lineHeight: px(24)}},
+								a.address.name ? `${a.address.name} ${a.address.address}` : a.address.address
+							)
+						]
+					),
+				]),
 				viewModel.canModifyGuests()
-					? m(ButtonN, {
+					? m(".mr-negative-s", m(ButtonN, {
 						label: "delete_action",
 						type: ButtonType.Action,
 						icon: () => Icons.Cancel,
 						click: () => viewModel.removeAttendee(a.address.address)
-					})
+					}))
 					: null
 			])
-
-			return m(".pt-s", viewModel.attendees.map(renderGuest))
+			return m("", viewModel.attendees.map(renderGuest))
 		}
 
 		function renderOrganizer(): Children {
@@ -181,18 +186,6 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 				disabled: !viewModel.canModifyOrganizer(),
 			})
 		}
-
-		const renderGoingSelector = () => m(DropDownSelectorN, Object.assign({}, {
-			label: "attendingEvent_label",
-			items: [
-				{name: lang.get("noSelection_msg"), value: CalendarAttendeeStatus.NEEDS_ACTION, selectable: false},
-				{name: lang.get("yes_label"), value: CalendarAttendeeStatus.ACCEPTED},
-				{name: lang.get("maybe_label"), value: CalendarAttendeeStatus.TENTATIVE},
-				{name: lang.get("no_label"), value: CalendarAttendeeStatus.DECLINED},
-			],
-			selectedValue: stream(viewModel.going),
-			selectionChangedHandler: (going) => viewModel.selectGoing(going)
-		}, {disabled: !viewModel.canModifyOwnAttendance()}))
 
 		const renderEasyGoingSelector = () => viewModel.existingEvent && viewModel.existingEvent.isCopy
 			? renderTwoColumnsIfFits(
@@ -222,9 +215,9 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 
 		const renderDateTimePickers = () => renderTwoColumnsIfFits(
 			[
-				m(".mr-s.flex-grow", m(startDatePicker)),
+				m(".flex-grow", m(startDatePicker)),
 				!viewModel.allDay()
-					? m(".time-field", m(TimePicker, {
+					? m(".ml-s.time-field", m(TimePicker, {
 						value: viewModel.startTime,
 						onselected: (time) => viewModel.onStartTimeSelected(time),
 						amPmFormat: viewModel.amPmFormat,
@@ -233,9 +226,9 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 					: null
 			],
 			[
-				m(".mr-s.flex-grow", m(endDatePicker)),
+				m(".flex-grow", m(endDatePicker)),
 				!viewModel.allDay()
-					? m(".time-field", m(TimePicker, {
+					? m(".ml-s.time-field", m(TimePicker, {
 						value: viewModel.endTime,
 						onselected: (time) => viewModel.onEndTimeSelected(time),
 						amPmFormat: viewModel.amPmFormat,
@@ -265,7 +258,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 		})
 
 		function renderCalendarPicker() {
-			return m(".flex-half.pl-s", m(DropDownSelectorN, ({
+			return m(".flex-half.pr-s", m(DropDownSelectorN, ({
 				label: "calendar_label",
 				items: viewModel.calendars.map((calendarInfo) => {
 					return {name: getCalendarName(calendarInfo.groupInfo, calendarInfo.shared), value: calendarInfo}
@@ -319,15 +312,15 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 
 		const renderRepeatRulePicker = () => renderTwoColumnsIfFits([
 				// Repeat type == Frequency: Never, daily, annually etc
-				m(".flex-grow", renderRepeatPeriod()),
+				m(".flex-grow.pr-s", renderRepeatPeriod()),
 				// Repeat interval: every day, every second day etc
-				m(".flex-grow.ml-s"
+				m(".flex-grow.pl-s"
 					+ (viewModel.repeat ? "" : ".hidden"), renderRepeatInterval()),
 			],
 			viewModel.repeat
 				? [
-					m(".flex-grow", renderEndType(viewModel.repeat)),
-					m(".flex-grow.ml-s", renderEndValue()),
+					m(".flex-grow.pr-s", renderEndType(viewModel.repeat)),
+					m(".flex-grow.pl-s", renderEndValue()),
 				]
 				: null
 		)
@@ -355,7 +348,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 						}),
 						m(".flex-grow"),
 						m(ExpanderButtonN, {
-							label: "showMore_action",
+							label: "guests_label",
 							expanded: attendeesExpanded,
 							style: {paddingTop: 0},
 						})
@@ -365,12 +358,10 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 							class: "mb",
 						}, renderTwoColumnsIfFits(
 						m(".flex-grow", [
-							viewModel.existingEvent ? renderGoingSelector() : null,
 							renderOrganizer(),
+							renderInviting(),
 						]),
 						m(".flex-grow", [
-							renderInviting(),
-							m(".mt", lang.get("guests_label")),
 							renderAttendees()
 						]),
 						),

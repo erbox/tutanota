@@ -1111,6 +1111,7 @@ module.exports = {
 		"deleteRepeatingEventConfirmation_msg": "Are you sure you want to delete this repeating event?",
 		// TODO add to phrase
 		"organizer_label": "Organizer",
+		"guest_label": "Guest",
 		"guests_label": "Guests",
 		"maybe_label": "Maybe",
 		"sendEventUpdate_msg": "Send out event update?",
