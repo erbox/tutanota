@@ -15,7 +15,7 @@ import {downcast, memoized, noOp} from "../api/common/utils/Utils"
 import type {ButtonAttrs} from "../gui/base/ButtonN"
 import {ButtonN, ButtonType} from "../gui/base/ButtonN"
 import type {CalendarAttendeeStatusEnum} from "../api/common/TutanotaConstants"
-import {AlarmInterval, CalendarAttendeeStatus, EndType, RepeatPeriod} from "../api/common/TutanotaConstants"
+import {AlarmInterval, CalendarAttendeeStatus, EndType, Keys, RepeatPeriod} from "../api/common/TutanotaConstants"
 import {findAndRemove, numberRange, remove} from "../api/common/utils/ArrayUtils"
 import {calendarAttendeeStatusDescription, getCalendarName, getStartOfTheWeekOffsetForUser} from "./CalendarUtils"
 import {TimePicker} from "../gui/base/TimePicker"
@@ -124,7 +124,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 			remove(attendeesField.bubbles, bubble)
 		})
 
-		const attendeesExpanded = stream(false)
+		const attendeesExpanded = stream(viewModel.attendees.length > 0)
 
 		const renderInviting = (): Children => viewModel.canModifyGuests() ? m(attendeesField) : null
 
@@ -409,10 +409,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 			if (viewModel.existingEvent == null) {
 				return Promise.resolve(true)
 			}
-			const p = viewModel.repeat
-				? Dialog.confirm("deleteRepeatingEventConfirmation_msg")
-				: Promise.resolve(true)
-			return p.then((answer) => {
+			return Dialog.confirm("deleteEventConfirmation_msg").then((answer) => {
 				if (answer) {
 					viewModel.deleteEvent()
 					dialog.close()
@@ -420,20 +417,14 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 			})
 		}
 
-		const moreButtonActions = () => [
-			{
-				label: "delete_action",
-				type: ButtonType.Dropdown,
-				icon: () => Icons.Trash,
-				click: () => deleteEvent()
-			}
-		]
-
-		const renderMoreButton = () => (existingEvent && existingEvent._id && !viewModel.readOnly)
-			? m(".mr-negative-s", m(ButtonN, attachDropdown({
-				label: "more_label",
-				icon: () => Icons.More,
-			}, moreButtonActions)))
+		const renderDeleteButton = () => (existingEvent && existingEvent._id && !viewModel.readOnly)
+			? m(".mr-negative-s", m(ButtonN, {
+					label: "delete_action",
+					type: ButtonType.Action,
+					icon: () => Icons.Trash,
+					click: () => deleteEvent()
+				}
+			))
 			: null
 
 		function renderHeading() {
@@ -444,18 +435,27 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 					disabled: viewModel.readOnly,
 					class: "big-input pt flex-grow mr-s"
 				}),
-				renderMoreButton(),
+				renderDeleteButton(),
 			])
 		}
 
 		const dialog = Dialog.largeDialog(
 			{
 				left: [{label: "cancel_action", click: () => dialog.close(), type: ButtonType.Secondary}],
-				right: [{label: "ok_action", click: () => okAction(dialog), type: ButtonType.Primary}],
+				right: [{label: "save_action", click: () => okAction(dialog), type: ButtonType.Primary}],
 				middle: () => lang.get("createEvent_label"),
 			},
 			{view: () => m(".calendar-edit-container.pb", renderDialogContent())}
-		)
+		).addShortcut({
+			key: Keys.ESC,
+			exec: () => dialog.close(),
+			help: "close_alt"
+		}).addShortcut({
+			key: Keys.S,
+			ctrl: true,
+			exec: () => okAction(dialog),
+			help: "save_action"
+		})
 		if (client.isMobileDevice()) {
 			// Prevent focusing text field automatically on mobile. It opens keyboard and you don't see all details.
 			dialog.setFocusOnLoadFunction(noOp)

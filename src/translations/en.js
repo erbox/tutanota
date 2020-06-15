@@ -302,7 +302,6 @@ module.exports = {
 		"deleteCredentials_action": "Delete credentials",
 		"deleteDnsRecords_msg": "Please delete or fix the following DNS records:",
 		"deleteEmails_action": "Delete the selected emails",
-		"deleteRepeatingEventConfirmation_msg": "Are you sure you want to delete this repeating event?",
 		"deleteSharedCalendarConfirm_msg": "The calendar \"{calendar}\" is shared with other users.",
 		"delete_action": "Delete",
 		"description_label": "Description",
@@ -1108,6 +1107,9 @@ module.exports = {
 		"yourCalendars_label": "Your calendars",
 		"yourFolders_action": "YOUR FOLDERS",
 		"yourMessage_label": "Your message",
+		// TODO remove from phrase
+		"deleteRepeatingEventConfirmation_msg": "Are you sure you want to delete this repeating event?",
+		// TODO add to phrase
 		"organizer_label": "Organizer",
 		"guests_label": "Guests",
 		"maybe_label": "Maybe",
@@ -1123,5 +1125,6 @@ module.exports = {
 		"awaiting_label": "Awaiting",
 		"attendingEvent_label": "Going?",
 		"eventCopy_msg": "This event was sent from another calendar. Changes will only be visible in your copy of the event",
+ 		"deleteEventConfirmation_msg": "Are you sure you want to delete this event?",
 	}
 }
