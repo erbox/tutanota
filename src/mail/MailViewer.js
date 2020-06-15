@@ -877,7 +877,7 @@ export class MailViewer {
 						: this._attachmentButtons.map(m),
 					firstCalendarFile
 						? m(ButtonN, {
-							label: "viewOrAddEvent_action",
+							label: "viewEvent_action",
 							type: ButtonType.Secondary,
 							click: () => {
 								showEventDetailsFromFile(firstCalendarFile)

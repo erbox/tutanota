@@ -1119,7 +1119,7 @@ module.exports = {
 		"eventUpdated_msg": "Event was updated: \"{event}\"",
 		"eventCancelled_msg": "Event is cancelled: \"{event}\"",
 		"cannotOpenEvent_msg": "Couldn't open the event",
-		"viewOrAddEvent_action": "View/Add event",
+		"viewEvent_action": "View event",
 		"who_label": "Who",
 		"when_label": "When",
 		"awaiting_label": "Awaiting",

@@ -1105,7 +1105,7 @@ export type TranslationKeyType =
 	| "eventUpdated_msg"
 	| "eventCancelled_msg"
 	| "cannotOpenEvent_msg"
-	| "viewOrAddEvent_action"
+	| "viewEvent_action"
 	| "who_label"
 	| "when_label"
 	| "awaiting_label"
