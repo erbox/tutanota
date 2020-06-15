@@ -108,6 +108,10 @@ function sendCalendarFile(editor: MailEditor, responseFile: DataFile, method: Ca
 }
 
 function organizerLine(event: CalendarEvent) {
+	// If organizer is already in the attendees, we don't have to add them separately.
+	if (event.attendees.find((a) => a.address.address === event.organizer)) {
+		return ""
+	}
 	return `<div style="display: flex"><div style="min-width: 80px">${lang.get("who_label")}:</div><div>${
 		event.organizer ? `${event.organizer} (${lang.get("organizer_label")})` : ""}</div></div>`
 }
@@ -117,6 +121,10 @@ function whenLine(event: CalendarEvent): string {
 	return `<div style="display: flex"><div style="min-width: 80px">${lang.get("when_label")}:</div>${duration}</div>`
 }
 
+function organizerLabel(event, a) {
+	return event.organizer === a.address.address ? `(${lang.get("organizer_label")})` : ""
+}
+
 function makeInviteEmailBody(event: CalendarEvent, message: string) {
 	return `<div style="max-width: 685px; margin: 0 auto">
   <h2 style="text-align: center">${message}</h2>
@@ -124,8 +132,10 @@ function makeInviteEmailBody(event: CalendarEvent, message: string) {
     ${whenLine(event)}
     ${organizerLine(event)}
     ${event.attendees.map((a) =>
-		"<div style='margin-left: 80px'>" + (a.address.name || "") + " " + a.address.address + " "
-		+ calendarAttendeeStatusSymbol(getAttendeeStatus(a)) + "</div>")
+		`<div style='margin-left: 80px'>
+${a.address.name || ""} ${a.address.address}
+${(organizerLabel(event, a))}
+${calendarAttendeeStatusSymbol(getAttendeeStatus(a))}</div>`)
 	       .join("\n")}
   </div>
   <hr style="border: 0; height: 1px; background-color: #ddd">
