@@ -1114,10 +1114,10 @@ module.exports = {
 		"guests_label": "Guests",
 		"maybe_label": "Maybe",
 		"sendEventUpdate_msg": "Send out event update?",
-		"eventInviteMail_msg": "You're invited to {event}",
-		"repliedToEventInvite_msg": "{sender} replied to calendar invitation",
-		"eventUpdated_msg": "Event updated {event}",
-		"eventCancelled_msg": "Event cancelled {event}",
+		"eventInviteMail_msg": "You're invited to \"{event}\"",
+		"repliedToEventInvite_msg": "{sender} replied to invitation for \"{event}\"",
+		"eventUpdated_msg": "Event was updated: \"{event}\"",
+		"eventCancelled_msg": "Event is cancelled: \"{event}\"",
 		"cannotOpenEvent_msg": "Couldn't open the event",
 		"viewOrAddEvent_action": "View/Add event",
 		"who_label": "Who",
@@ -1125,6 +1125,6 @@ module.exports = {
 		"awaiting_label": "Awaiting",
 		"attendingEvent_label": "Going?",
 		"eventCopy_msg": "This event was sent from another calendar. Changes will only be visible in your copy of the event",
- 		"deleteEventConfirmation_msg": "Are you sure you want to delete this event?",
+		"deleteEventConfirmation_msg": "Are you sure you want to delete this event?",
 	}
 }

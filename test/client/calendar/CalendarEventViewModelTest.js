@@ -210,12 +210,13 @@ o.spec("CalendarEventViewModel", function () {
 			const calendars = makeCalendars("own")
 			const distributor = makeDistributor()
 			const attendee = makeAttendee()
+			const ownAttendee = makeAttendee(mailAddress)
 			const calendarModel = makeCalendarModel()
 			const existingEvent = createCalendarEvent({
 				_id: ["listid", "calendarid"],
 				_ownerGroup: calendarGroupId,
 				organizer: mailAddress,
-				attendees: [attendee]
+				attendees: [ownAttendee, attendee]
 			})
 			const viewModel = init({calendars, existingEvent, calendarModel, distributor})
 			await viewModel.deleteEvent()
@@ -696,11 +697,8 @@ o.spec("CalendarEventViewModel", function () {
 
 			viewModel.addAttendee(guest)
 
+			// Organizer is not added because new attendee was not added
 			o(viewModel.attendees).deepEquals([
-				createCalendarEventAttendee({
-					address: createEncryptedMailAddress({address: mailAddress}),
-					status: CalendarAttendeeStatus.ACCEPTED,
-				}),
 				createCalendarEventAttendee({
 					address: createEncryptedMailAddress({address: guest}),
 					status: CalendarAttendeeStatus.NEEDS_ACTION,
@@ -954,10 +952,10 @@ function addCapability(user: User, groupId: Id, capability: ShareCapabilityEnum)
 	}))
 }
 
-function makeAttendee() {
+function makeAttendee(address: string = "attendee@example.com") {
 	return createCalendarEventAttendee({
 		address: createEncryptedMailAddress({
-			address: "attendee@example.com"
+			address
 		})
 	})
 }

@@ -411,7 +411,9 @@ export class CalendarEventViewModel {
 		const event = this.existingEvent
 		if (event) {
 			const awaitCancellation = this._eventType === EventType.OWN && event.attendees.length
-				? this._distributor.sendCancellation(event, event.attendees.map(a => a.address))
+				? this._distributor.sendCancellation(event, event.attendees
+				                                                 .filter(a => !this._mailAddresses.includes(a.address.address))
+				                                                 .map(a => a.address))
 				: Promise.resolve()
 			return awaitCancellation.then(() => this._calendarModel.deleteEvent(event)).catch(NotFoundError, noOp)
 		} else {

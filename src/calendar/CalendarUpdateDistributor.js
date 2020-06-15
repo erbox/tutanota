@@ -72,8 +72,8 @@ export class CalendarMailDistributor implements CalendarUpdateDistributor {
 				name,
 				address
 			}))
-			editor.initWithTemplate({bcc}, lang.get("eventCancelled_msg", {"{event}": event.summary}),
-				makeInviteEmailBody(event, ""))
+			const message = lang.get("eventCancelled_msg", {"{event}": event.summary})
+			editor.initWithTemplate({bcc}, message, makeInviteEmailBody(event, message))
 
 			const file = makeInvitationCalendarFile(event, CalendarMethod.CANCEL, new Date(), getTimeZone())
 			sendCalendarFile(editor, file, CalendarMethod.CANCEL)
@@ -87,7 +87,7 @@ export class CalendarMailDistributor implements CalendarUpdateDistributor {
 		}
 		return this._mailModel.getUserMailboxDetails().then((mailboxDetails) => {
 			const editor = new MailEditor(mailboxDetails)
-			const message = lang.get("repliedToEventInvite_msg", {"{sender}": sender.name || sender.address})
+			const message = lang.get("repliedToEventInvite_msg", {"{sender}": sender.name || sender.address, "{event}": event.summary})
 			editor.initWithTemplate({to: [{name: "", address: organizer}]},
 				message,
 				makeResponseEmailBody(event, message, sender, status), false)
