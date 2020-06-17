@@ -281,8 +281,7 @@ export class MailViewer {
 									message: lang.get("phishingMessageBody_msg"),
 									icon: Icons.Warning,
 									helpLink: "https://tutanota.com/faq#phishing",
-									buttonText: lang.get("markAsNotPhishing_action"),
-									buttonClick: () => this._markAsNotPhishing(),
+									buttons: [{text: lang.get("markAsNotPhishing_action"), click: () => this._markAsNotPhishing()}]
 								})
 								: !this._warningDismissed && mail.authStatus === MailAuthenticationStatus.HARD_FAIL
 								? m(Banner, {
@@ -291,8 +290,7 @@ export class MailViewer {
 									message: lang.get("mailAuthFailed_msg"),
 									icon: Icons.Warning,
 									helpLink: "https://tutanota.com/faq#mail-auth",
-									buttonText: lang.get("close_alt"),
-									buttonClick: () => this._warningDismissed = true
+									buttons: [{text: lang.get("close_alt"), click: () => this._warningDismissed = true}]
 								})
 								: !this._warningDismissed && mail.authStatus === MailAuthenticationStatus.SOFT_FAIL
 									? m(Banner, {
@@ -301,8 +299,7 @@ export class MailViewer {
 										message: mail.differentEnvelopeSender ? lang.get("technicalSender_msg", {"{sender}": mail.differentEnvelopeSender}) : "",
 										icon: Icons.Warning,
 										helpLink: "https://tutanota.com/faq#mail-auth",
-										buttonText: lang.get("close_alt"),
-										buttonClick: () => this._warningDismissed = true,
+										buttons: [{text: lang.get("close_alt"), click: () => this._warningDismissed = true}]
 									})
 									: null,
 							this._renderAttachments(),
@@ -1122,18 +1119,18 @@ export class MailViewer {
 		return checkApprovalStatus(false).then(sendAllowed => {
 			if (sendAllowed) {
 				return locator.mailModel.getMailboxDetailsForMail(this.mail)
-				                .then((mailboxDetails) => {
-					                let editor = new MailEditor(mailboxDetails)
-					                return editor.initFromDraft({
-						                draftMail: this.mail,
-						                attachments: this._attachments,
-						                bodyText: this._getMailBody(),
-						                blockExternalContent: this._contentBlocked,
-						                inlineImages: this._inlineImages
-					                }).then(() => {
-						                editor.show()
-					                })
-				                })
+				              .then((mailboxDetails) => {
+					              let editor = new MailEditor(mailboxDetails)
+					              return editor.initFromDraft({
+						              draftMail: this.mail,
+						              attachments: this._attachments,
+						              bodyText: this._getMailBody(),
+						              blockExternalContent: this._contentBlocked,
+						              inlineImages: this._inlineImages
+					              }).then(() => {
+						              editor.show()
+					              })
+				              })
 			}
 		})
 	}

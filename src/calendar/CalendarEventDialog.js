@@ -34,7 +34,8 @@ import {ExpanderButtonN, ExpanderPanelN} from "../gui/base/ExpanderN"
 import {client} from "../misc/ClientDetector"
 import {locator} from "../api/main/MainLocator"
 import {CalendarEventViewModel} from "./CalendarEventViewModel"
-
+import {theme} from "../gui/theme"
+import {Banner, BannerType} from "../gui/base/Banner"
 
 const iconForStatus = {
 	[CalendarAttendeeStatus.ACCEPTED]: Icons.Checkmark,
@@ -140,37 +141,54 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 		const renderInviting = (): Children => viewModel.canModifyGuests() ? m(attendeesField) : null
 
 		function renderAttendees() {
-
 			const ownAttendee = viewModel.findOwnAttendee()
+			const renderGuest = a => {
+				const isOrganizer = a.address.address === viewModel.organizer
+				return m(".flex.mt", {
+					style: {height: px(size.button_height), borderBottom: "1px transparent"},
+				}, [
+					m(".flex.col.flex-grow", [
+						m(".small", lang.get(isOrganizer ? "organizer_label" : "guest_label")),
+						m(".flex.flex-grow.items-center",
+							[
 
+								m("div", {style: {lineHeight: px(24)}},
+									a.address.name ? `${a.address.name} ${a.address.address}` : a.address.address
+								),
 
-			const renderGuest = a => m(".flex.mt", {
-				style: {height: px(size.button_height), borderBottom: "1px transparent"},
-			}, [
-				m(".flex.col.flex-grow", [
-					m(".small", lang.get(a.address.address === viewModel.organizer ? "organizer_label" : "guest_label")),
-					m(".flex.flex-grow.items-center",
-						[
-
-							m("div", {style: {lineHeight: px(24)}},
-								a.address.name ? `${a.address.name} ${a.address.address}` : a.address.address
-							),
-
-						]
-					),
-				]),
-				[
-					viewModel.canModifyGuests()
-						? m(".mr-negative-s", m(ButtonN, {
-							label: "delete_action",
-							type: ButtonType.Secondary,
-							//icon: () => Icons.Cancel,
-							click: () => viewModel.removeAttendee(a.address.address)
-						}))
-						: null,
-					renderStatusIcon(viewModel, a, ownAttendee)
-				]
-			])
+							]
+						),
+					]),
+					[
+						isOrganizer && viewModel.canModifyOrganizer()
+							? m(".mr-s", m(ButtonN, {
+								label: "edit_action",
+								type: ButtonType.Secondary,
+								//icon: () => Icons.Cancel,
+								click: createDropdown(() => {
+									return viewModel.possibleOrganizers.map((address) => {
+											return {
+												label: () => address,
+												click: () => viewModel.setOrganizer(address),
+												type: ButtonType.Dropdown
+											}
+										}
+									)
+								})
+							}))
+							: null,
+						!isOrganizer && viewModel.canModifyGuests()
+							? m(".mr-s", m(ButtonN, {
+								label: "remove_action",
+								type: ButtonType.Secondary,
+								//icon: () => Icons.Cancel,
+								click: () => viewModel.removeAttendee(a.address.address)
+							}))
+							: null,
+						renderStatusIcon(viewModel, a, ownAttendee)
+					]
+				])
+			}
 			return m("", viewModel.attendees.map(renderGuest))
 		}
 
@@ -185,31 +203,36 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 			})
 		}
 
-		const renderEasyGoingSelector = () => viewModel.existingEvent && viewModel.existingEvent.isCopy
-			? renderTwoColumnsIfFits(
-				m(".flex.items-center.flex-grow", [
-						m("", lang.get("attendingEvent_label")),
-						m(".flex-grow"),
-						m(ButtonN, {
-							label: "yes_label",
-							click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.ACCEPTED).then(() => dialog.close()),
-							type: viewModel.going === CalendarAttendeeStatus.ACCEPTED ? ButtonType.Primary : ButtonType.Secondary,
-						}),
-						m(ButtonN, {
-							label: "maybe_label",
-							click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.TENTATIVE).then(() => dialog.close()),
-							type: viewModel.going === CalendarAttendeeStatus.TENTATIVE ? ButtonType.Primary : ButtonType.Secondary,
-						}),
-						m(ButtonN, {
-							label: "no_label",
-							click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.DECLINED).then(() => dialog.close()),
-							type: viewModel.going === CalendarAttendeeStatus.DECLINED ? ButtonType.Primary : ButtonType.Secondary,
-						}),
-					]
-				),
-				null
-			)
-			: null
+
+		function renderAttendeeConfirmBanner(): Children {
+			if (!viewModel.existingEvent || !viewModel.existingEvent.isCopy) {
+				return null
+			}
+			const ownAttendee = viewModel.findOwnAttendee()
+			if (!ownAttendee || ownAttendee.status !== CalendarAttendeeStatus.NEEDS_ACTION) {
+				return null
+			}
+			return m(Banner, {
+				type: BannerType.Info,
+				title: "",
+				message: lang.get("attendingEvent_label"),
+				icon: BootIcons.Calendar,
+				buttons: [
+					{
+						text: lang.get("yes_label"),
+						click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.ACCEPTED).then(() => dialog.close())
+					},
+					{
+						text: lang.get("maybe_label"),
+						click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.TENTATIVE).then(() => dialog.close())
+					},
+					{
+						text: lang.get("no_label"),
+						click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.DECLINED).then(() => dialog.close())
+					}
+				]
+			})
+		}
 
 		const renderDateTimePickers = () => renderTwoColumnsIfFits(
 			[
@@ -335,8 +358,8 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 
 			return m(".calendar-edit-container.pb", [
 					renderHeading(),
+					renderAttendeeConfirmBanner(),
 					renderChangesMessage(),
-					renderEasyGoingSelector(),
 					renderDateTimePickers(),
 					m(".flex.items-center", [
 						m(CheckboxN, {
@@ -474,13 +497,14 @@ function renderStatusIcon(viewModel: CalendarEventViewModel, attendee: CalendarE
 			style: {display: "block"}
 		})
 	const status: CalendarAttendeeStatusEnum = downcast(attendee.status)
-	return m(".mr-s.flex.items-center", {
-//					style: {display: "block"},
+
+	return m("button.button-width.flex.items-center", {
 		title: calendarAttendeeStatusDescription(status),
-		onclick: () => {
+		disabled: !editable ? "true" : null,
+		onclick: (e) => {
 			console.log("xxxxx onclick ", editable)
 			if (editable) {
-				createDropdown(() => {
+				const openDropdown = createDropdown(() => {
 					return selectors.map(selector => {
 						const checkedIcon = selector.icon
 						return {
@@ -491,9 +515,13 @@ function renderStatusIcon(viewModel: CalendarEventViewModel, attendee: CalendarE
 						}
 					})
 				})
+				openDropdown(e, e.target)
 			}
 		}
-	}, iconElement)
+	}, [
+		iconElement,
+		editable ? m(Icon, {icon: BootIcons.Expand, style: {fill: theme.content_button}}) : m(".icon")
+	])
 }
 
 

@@ -105,6 +105,10 @@ styles.registerStyle('main', () => {
 		'button': {
 			'background': 'transparent', // removes default browser style for buttons
 		},
+
+		'button:disabled': {
+			cursor: "default"
+		},
 		'body, button': { // Yes we have to tell buttons separately because browser button styles override general body ones
 			overflow: 'hidden',
 			// see: https://www.smashingmagazine.com/2015/11/using-system-ui-fonts-practical-guide/ and github

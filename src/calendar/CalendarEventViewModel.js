@@ -381,8 +381,15 @@ export class CalendarEventViewModel {
 	}
 
 	canModifyOrganizer(): boolean {
-		return this._eventType !== EventType.SHARED_RO
-			&& (!this.existingEvent || (!this.existingEvent.isCopy && this.existingEvent.attendees.length === 0))
+		return this._eventType === EventType.OWN
+			&& (!this.existingEvent
+				|| (this.existingEvent.attendees.length === 0)
+				|| (this.existingEvent.attendees.length === 1
+					&& this._mailAddresses.includes(this.existingEvent.attendees[0].address.address)))
+	}
+
+	setOrganizer(mailAddress: string): void {
+		this.organizer = mailAddress
 	}
 
 	canModifyAlarms(): boolean {
