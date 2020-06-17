@@ -165,7 +165,6 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 							? m(".mr-s.flew-grow", m(ButtonN, {
 								label: "edit_action",
 								type: ButtonType.Secondary,
-								//icon: () => Icons.Cancel,
 								click: createDropdown(() => {
 									return viewModel.possibleOrganizers.map((address) => {
 											return {
@@ -182,7 +181,6 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 							? m(".mr-s-flex-grow", m(ButtonN, {
 								label: "remove_action",
 								type: ButtonType.Secondary,
-								//icon: () => Icons.Cancel,
 								click: () => viewModel.removeAttendee(a.address.address)
 							}))
 							: null,
@@ -192,7 +190,6 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 			}
 			return m("", viewModel.attendees.map(renderGuest))
 		}
-
 
 		function renderOrganizer(): Children {
 			return m(DropDownSelectorN, {
@@ -378,18 +375,11 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 					m(ExpanderPanelN, {
 							expanded: attendeesExpanded,
 							class: "mb",
-						}, //renderTwoColumnsIfFits(
+						},
 						[
-							m(".flex-grow", [
-								renderInviting(),
-								//renderOrganizer(),
-
-							]),
-							m(".flex-grow", [
-								renderAttendees()
-							])
+							m(".flex-grow", renderInviting()),
+							m(".flex-grow", renderAttendees())
 						],
-						//),
 					),
 					renderRepeatRulePicker(),
 					m(".flex", [
@@ -503,7 +493,6 @@ function renderStatusIcon(viewModel: CalendarEventViewModel, attendee: CalendarE
 		title: calendarAttendeeStatusDescription(status),
 		disabled: !editable ? "true" : null,
 		onclick: (e) => {
-			console.log("xxxxx onclick ", editable)
 			if (editable) {
 				const openDropdown = createDropdown(() => {
 					return selectors.map(selector => {

@@ -105,7 +105,6 @@ styles.registerStyle('main', () => {
 		'button': {
 			'background': 'transparent', // removes default browser style for buttons
 		},
-
 		'button:disabled': {
 			cursor: "default"
 		},

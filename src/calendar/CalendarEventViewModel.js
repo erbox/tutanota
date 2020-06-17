@@ -389,7 +389,9 @@ export class CalendarEventViewModel {
 	}
 
 	setOrganizer(mailAddress: string): void {
-		this.organizer = mailAddress
+		if (this.canModifyOrganizer()) {
+			this.organizer = mailAddress
+		}
 	}
 
 	canModifyAlarms(): boolean {

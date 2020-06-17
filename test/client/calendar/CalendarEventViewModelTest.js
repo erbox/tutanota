@@ -142,8 +142,8 @@ o.spec("CalendarEventViewModel", function () {
 		o(viewModel.readOnly).equals(false)
 		o(viewModel.canModifyGuests()).equals(false)
 		o(viewModel.canModifyOwnAttendance()).equals(false)
-		o(viewModel.canModifyOrganizer()).equals(true)
-		o(viewModel.possibleOrganizers).deepEquals([existingEvent.organizer, mailAddress])
+		o(viewModel.canModifyOrganizer()).equals(false)
+		o(viewModel.possibleOrganizers).deepEquals([existingEvent.organizer])
 	})
 
 	o("invite in writable calendar", function () {
@@ -886,7 +886,7 @@ o.spec("CalendarEventViewModel", function () {
 				})
 			})
 
-			o(viewModel.canModifyOrganizer()).equals(true)
+			o(viewModel.canModifyOrganizer()).equals(false)
 		})
 
 		o("cannot modify when it's invite in own calendar", function () {
