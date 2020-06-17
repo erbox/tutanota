@@ -138,7 +138,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 
 		const attendeesExpanded = stream(viewModel.attendees.length > 0)
 
-		const renderInviting = (): Children => viewModel.canModifyGuests() ? m(attendeesField) : null
+		const renderInviting = (): Children => viewModel.canModifyGuests() ? m(".mt-negative-m", m(attendeesField)) : null
 
 		function renderAttendees() {
 			const ownAttendee = viewModel.findOwnAttendee()
@@ -147,21 +147,22 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 				return m(".flex.mt", {
 					style: {height: px(size.button_height), borderBottom: "1px transparent"},
 				}, [
-					m(".flex.col.flex-grow", [
+					m(".flex.col.flex-grow.overflow-hidden.flex-no-grow-shrink-auto", [
 						m(".small", lang.get(isOrganizer ? "organizer_label" : "guest_label")),
 						m(".flex.flex-grow.items-center",
 							[
 
-								m("div", {style: {lineHeight: px(24)}},
+								m("div.text-ellipsis", {style: {lineHeight: px(24)}},
 									a.address.name ? `${a.address.name} ${a.address.address}` : a.address.address
 								),
 
 							]
 						),
 					]),
+					m(".flex-grow"),
 					[
 						isOrganizer && viewModel.canModifyOrganizer()
-							? m(".mr-s", m(ButtonN, {
+							? m(".mr-s.flew-grow", m(ButtonN, {
 								label: "edit_action",
 								type: ButtonType.Secondary,
 								//icon: () => Icons.Cancel,
@@ -178,7 +179,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 							}))
 							: null,
 						!isOrganizer && viewModel.canModifyGuests()
-							? m(".mr-s", m(ButtonN, {
+							? m(".mr-s-flex-grow", m(ButtonN, {
 								label: "remove_action",
 								type: ButtonType.Secondary,
 								//icon: () => Icons.Cancel,
@@ -576,7 +577,7 @@ function makeAttendeesField(onBubbleCreated: (Bubble<RecipientInfo>) => void): B
 		},
 
 	})
-	const invitePeopleValueTextField = new BubbleTextField("shareWithEmailRecipient_label", bubbleHandler, {marginLeft: 0})
+	const invitePeopleValueTextField = new BubbleTextField("addGuest_label", bubbleHandler, {marginLeft: 0})
 	return invitePeopleValueTextField
 }
 

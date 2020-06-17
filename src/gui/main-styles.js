@@ -226,6 +226,7 @@ styles.registerStyle('main', () => {
 		'.mr-button': {'margin-right': px(size.hpad_button)},
 
 		'.mt-negative-s': {'margin-top': px(-size.hpad_button)},
+		'.mt-negative-m': {'margin-top': px(-size.vpad)},
 		'.mr-negative-s': {'margin-right': px(-size.hpad_button)},
 		'.ml-negative-s': {'margin-left': px(-size.hpad_button)}, // negative margin to handle the default padding of a button
 		'.ml-negative-l': {'margin-left': px(-size.hpad_large)},

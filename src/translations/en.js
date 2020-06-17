@@ -1127,6 +1127,6 @@ module.exports = {
 		"attendingEvent_label": "You have been invited to take part in this event. Do you want to attend?",
 		"eventCopy_msg": "This event was sent from another calendar. Changes will only be visible in your copy of the event",
 		"deleteEventConfirmation_msg": "Are you sure you want to delete this event?",
-
+		"addGuest_label": "Add a guest",
 	}
 }
