@@ -121,7 +121,7 @@ export class CalendarEventViewModel {
 		this._zone = zone
 		this.alarms = []
 		this._mailAddresses = getEnabledMailAddressesWithUser(mailboxDetail, userController.userGroupInfo)
-		const ownAttendee = this._findOwnAttendee()
+		const ownAttendee = this.findOwnAttendee()
 		this.going = ownAttendee ? getAttendeeStatus(ownAttendee) : CalendarAttendeeStatus.NEEDS_ACTION
 		this._user = userController.user
 
@@ -229,7 +229,7 @@ export class CalendarEventViewModel {
 		}
 	}
 
-	_findOwnAttendee() {
+	findOwnAttendee(): ?CalendarEventAttendee {
 		return this.attendees.find(a => this._mailAddresses.includes(a.address.address))
 	}
 
@@ -253,7 +253,7 @@ export class CalendarEventViewModel {
 			address: createEncryptedMailAddress({address: mailAddress}),
 		})
 		this.attendees.push(attendee)
-		if (this.attendees.length === 1 && this._findOwnAttendee() == null) {
+		if (this.attendees.length === 1 && this.findOwnAttendee() == null) {
 			this.selectGoing(CalendarAttendeeStatus.ACCEPTED)
 		}
 	}
@@ -377,7 +377,7 @@ export class CalendarEventViewModel {
 
 	canModifyOwnAttendance(): boolean {
 		return (this._eventType === EventType.OWN || this._eventType === EventType.INVITE)
-			&& (this._viewingOwnEvent() || !!this._findOwnAttendee())
+			&& (this._viewingOwnEvent() || !!this.findOwnAttendee())
 	}
 
 	canModifyOrganizer(): boolean {
@@ -410,12 +410,12 @@ export class CalendarEventViewModel {
 	deleteEvent(): Promise<bool> {
 		const event = this.existingEvent
 		if (event) {
- 			const updatedEvent = clone(event)
+			const updatedEvent = clone(event)
 			updatedEvent.sequence = incrementSequence(updatedEvent.sequence)
 			const awaitCancellation = this._eventType === EventType.OWN && event.attendees.length
 				? this._distributor.sendCancellation(updatedEvent, event.attendees
-				                                                 .filter(a => !this._mailAddresses.includes(a.address.address))
-				                                                 .map(a => a.address))
+				                                                        .filter(a => !this._mailAddresses.includes(a.address.address))
+				                                                        .map(a => a.address))
 				: Promise.resolve()
 			return awaitCancellation.then(() => this._calendarModel.deleteEvent(event)).catch(NotFoundError, noOp)
 		} else {
@@ -588,7 +588,7 @@ export class CalendarEventViewModel {
 	selectGoing(going: CalendarAttendeeStatusEnum) {
 		if (this.canModifyOwnAttendance()) {
 			this.going = going
-			const ownAttendee = this._findOwnAttendee()
+			const ownAttendee = this.findOwnAttendee()
 			if (ownAttendee) {
 				ownAttendee.status = going
 			} else {

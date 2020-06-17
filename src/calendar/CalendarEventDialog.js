@@ -7,7 +7,7 @@ import type {CalendarInfo} from "./CalendarView"
 import m from "mithril"
 import {TextFieldN} from "../gui/base/TextFieldN"
 import {lang} from "../misc/LanguageViewModel"
-import type {DropDownSelectorAttrs} from "../gui/base/DropDownSelectorN"
+import type {DropDownSelectorAttrs, SelectorItemList} from "../gui/base/DropDownSelectorN"
 import {DropDownSelectorN} from "../gui/base/DropDownSelectorN"
 import {Icons} from "../gui/base/icons/Icons"
 import type {CalendarEvent} from "../api/entities/tutanota/CalendarEvent"
@@ -25,7 +25,7 @@ import type {CalendarEventAttendee} from "../api/entities/tutanota/CalendarEvent
 import {Bubble, BubbleTextField} from "../gui/base/BubbleTextField"
 import {MailAddressBubbleHandler} from "../misc/MailAddressBubbleHandler"
 import type {Contact} from "../api/entities/tutanota/Contact"
-import {attachDropdown} from "../gui/base/DropdownN"
+import {attachDropdown, createDropdown} from "../gui/base/DropdownN"
 import {HtmlEditor} from "../gui/base/HtmlEditor"
 import {Icon} from "../gui/base/Icon"
 import {BootIcons} from "../gui/base/icons/BootIcons"
@@ -33,6 +33,28 @@ import {CheckboxN} from "../gui/base/CheckboxN"
 import {ExpanderButtonN, ExpanderPanelN} from "../gui/base/ExpanderN"
 import {client} from "../misc/ClientDetector"
 import {locator} from "../api/main/MainLocator"
+import {CalendarEventViewModel} from "./CalendarEventViewModel"
+
+
+const iconForStatus = {
+	[CalendarAttendeeStatus.ACCEPTED]: Icons.Checkmark,
+	[CalendarAttendeeStatus.TENTATIVE]: BootIcons.Help,
+	[CalendarAttendeeStatus.DECLINED]: Icons.Cancel,
+	[CalendarAttendeeStatus.NEEDS_ACTION]: null
+}
+
+const alarmIntervalItems = [
+	{name: lang.get("comboBoxSelectionNone_msg"), value: null},
+	{name: lang.get("calendarReminderIntervalFiveMinutes_label"), value: AlarmInterval.FIVE_MINUTES},
+	{name: lang.get("calendarReminderIntervalTenMinutes_label"), value: AlarmInterval.TEN_MINUTES},
+	{name: lang.get("calendarReminderIntervalThirtyMinutes_label"), value: AlarmInterval.THIRTY_MINUTES},
+	{name: lang.get("calendarReminderIntervalOneHour_label"), value: AlarmInterval.ONE_HOUR},
+	{name: lang.get("calendarReminderIntervalOneDay_label"), value: AlarmInterval.ONE_DAY},
+	{name: lang.get("calendarReminderIntervalTwoDays_label"), value: AlarmInterval.TWO_DAYS},
+	{name: lang.get("calendarReminderIntervalThreeDays_label"), value: AlarmInterval.THREE_DAYS},
+	{name: lang.get("calendarReminderIntervalOneWeek_label"), value: AlarmInterval.ONE_WEEK}
+]
+
 
 export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarInfo>, mailboxDetail: MailboxDetail,
                                         existingEvent?: CalendarEvent) {
@@ -49,17 +71,6 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 		const repeatEndDatePicker = new DatePicker(startOfTheWeekOffset, "emptyString_msg", "emptyString_msg", true)
 		repeatEndDatePicker.date.map((date) => viewModel.onRepeatEndDateSelected(date))
 
-		const alarmIntervalItems = [
-			{name: lang.get("comboBoxSelectionNone_msg"), value: null},
-			{name: lang.get("calendarReminderIntervalFiveMinutes_label"), value: AlarmInterval.FIVE_MINUTES},
-			{name: lang.get("calendarReminderIntervalTenMinutes_label"), value: AlarmInterval.TEN_MINUTES},
-			{name: lang.get("calendarReminderIntervalThirtyMinutes_label"), value: AlarmInterval.THIRTY_MINUTES},
-			{name: lang.get("calendarReminderIntervalOneHour_label"), value: AlarmInterval.ONE_HOUR},
-			{name: lang.get("calendarReminderIntervalOneDay_label"), value: AlarmInterval.ONE_DAY},
-			{name: lang.get("calendarReminderIntervalTwoDays_label"), value: AlarmInterval.TWO_DAYS},
-			{name: lang.get("calendarReminderIntervalThreeDays_label"), value: AlarmInterval.THREE_DAYS},
-			{name: lang.get("calendarReminderIntervalOneWeek_label"), value: AlarmInterval.ONE_WEEK}
-		]
 
 		const endOccurrencesStream = memoized(stream)
 
@@ -129,27 +140,9 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 		const renderInviting = (): Children => viewModel.canModifyGuests() ? m(attendeesField) : null
 
 		function renderAttendees() {
-			const iconForStatus = {
-				[CalendarAttendeeStatus.ACCEPTED]: Icons.Checkmark,
-				[CalendarAttendeeStatus.TENTATIVE]: BootIcons.Help,
-				[CalendarAttendeeStatus.DECLINED]: Icons.Cancel,
-				[CalendarAttendeeStatus.NEEDS_ACTION]: null
-			}
 
-			function renderStatusIcon(attendee: CalendarEventAttendee): Children {
-				const icon = iconForStatus[attendee.status]
+			const ownAttendee = viewModel.findOwnAttendee()
 
-				const iconElement = icon
-					? m(Icon, {icon, large: true})
-					: m(".icon-large", {
-						style: {display: "block"}
-					})
-				const status: CalendarAttendeeStatusEnum = downcast(attendee.status)
-				return m(".mr-s", {
-					style: {display: "block"},
-					title: calendarAttendeeStatusDescription(status)
-				}, iconElement)
-			}
 
 			const renderGuest = a => m(".flex.mt", {
 				style: {height: px(size.button_height), borderBottom: "1px transparent"},
@@ -158,24 +151,29 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 					m(".small", lang.get(a.address.address === viewModel.organizer ? "organizer_label" : "guest_label")),
 					m(".flex.flex-grow.items-center",
 						[
-							renderStatusIcon(a),
+
 							m("div", {style: {lineHeight: px(24)}},
 								a.address.name ? `${a.address.name} ${a.address.address}` : a.address.address
-							)
+							),
+
 						]
 					),
 				]),
-				viewModel.canModifyGuests()
-					? m(".mr-negative-s", m(ButtonN, {
-						label: "delete_action",
-						type: ButtonType.Action,
-						icon: () => Icons.Cancel,
-						click: () => viewModel.removeAttendee(a.address.address)
-					}))
-					: null
+				[
+					viewModel.canModifyGuests()
+						? m(".mr-negative-s", m(ButtonN, {
+							label: "delete_action",
+							type: ButtonType.Secondary,
+							//icon: () => Icons.Cancel,
+							click: () => viewModel.removeAttendee(a.address.address)
+						}))
+						: null,
+					renderStatusIcon(viewModel, a, ownAttendee)
+				]
 			])
 			return m("", viewModel.attendees.map(renderGuest))
 		}
+
 
 		function renderOrganizer(): Children {
 			return m(DropDownSelectorN, {
@@ -356,15 +354,18 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 					m(ExpanderPanelN, {
 							expanded: attendeesExpanded,
 							class: "mb",
-						}, renderTwoColumnsIfFits(
-						m(".flex-grow", [
-							renderOrganizer(),
-							renderInviting(),
-						]),
-						m(".flex-grow", [
-							renderAttendees()
-						]),
-						),
+						}, //renderTwoColumnsIfFits(
+						[
+							m(".flex-grow", [
+								renderInviting(),
+								//renderOrganizer(),
+
+							]),
+							m(".flex-grow", [
+								renderAttendees()
+							])
+						],
+						//),
 					),
 					renderRepeatRulePicker(),
 					m(".flex", [
@@ -453,6 +454,46 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 		}
 		dialog.show()
 	})
+}
+
+
+function renderStatusIcon(viewModel: CalendarEventViewModel, attendee: CalendarEventAttendee, ownAttendee: ?CalendarEventAttendee): Children {
+	const icon = iconForStatus[attendee.status]
+
+	const editable = ownAttendee === attendee && viewModel.canModifyOwnAttendance()
+
+	const selectors: SelectorItemList<CalendarAttendeeStatusEnum> = [
+		{name: "Yes", value: CalendarAttendeeStatus.ACCEPTED, icon: Icons.Checkmark},
+		{name: "Maybe", value: CalendarAttendeeStatus.TENTATIVE, icon: BootIcons.Help},
+		{name: "No", value: CalendarAttendeeStatus.DECLINED, icon: Icons.Cancel}
+	]
+
+	const iconElement = icon
+		? m(Icon, {icon, large: true})
+		: m(".icon-large", {
+			style: {display: "block"}
+		})
+	const status: CalendarAttendeeStatusEnum = downcast(attendee.status)
+	return m(".mr-s.flex.items-center", {
+//					style: {display: "block"},
+		title: calendarAttendeeStatusDescription(status),
+		onclick: () => {
+			console.log("xxxxx onclick ", editable)
+			if (editable) {
+				createDropdown(() => {
+					return selectors.map(selector => {
+						const checkedIcon = selector.icon
+						return {
+							label: () => selector.name,
+							click: () => viewModel.selectGoing(selector.value),
+							type: ButtonType.Dropdown,
+							icon: checkedIcon ? () => checkedIcon : null
+						}
+					})
+				})
+			}
+		}
+	}, iconElement)
 }
 
 

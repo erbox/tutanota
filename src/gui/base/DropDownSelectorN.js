@@ -13,7 +13,7 @@ import {noOp} from "../../api/common/utils/Utils"
 
 assertMainOrNode()
 
-export type SelectorItem<T> = {name: string, value: T, selectable?: boolean}
+export type SelectorItem<T> = {name: string, value: T, selectable?: boolean, icon?: AllIconsEnum}
 export type SelectorItemList<T> = $ReadOnlyArray<SelectorItem<T>>
 
 export type DropDownSelectorAttrs<T> = {

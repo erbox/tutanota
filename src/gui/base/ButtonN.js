@@ -90,7 +90,7 @@ export type ButtonAttrs = {
 	label: TranslationKey | lazy<string>,
 	title?: TranslationKey | lazy<string>,
 	click: clickHandler,
-	icon?: lazyIcon,
+	icon?: ?lazyIcon,
 	type?: ButtonTypeEnum,
 	colors?: ButtonColorEnum,
 	isVisible?: lazy<boolean>,
