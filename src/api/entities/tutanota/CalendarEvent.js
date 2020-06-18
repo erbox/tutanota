@@ -3,6 +3,7 @@
 import {create, TypeRef} from "../../common/EntityFunctions"
 
 import type {CalendarEventAttendee} from "./CalendarEventAttendee"
+import type {EncryptedMailAddress} from "./EncryptedMailAddress"
 import type {CalendarRepeatRule} from "./CalendarRepeatRule"
 
 export const CalendarEventTypeRef: TypeRef<CalendarEvent> = new TypeRef("tutanota", "CalendarEvent")
@@ -89,7 +90,7 @@ export const _TypeModel: TypeModel = {
 		},
 		"isCopy": {
 			"name": "isCopy",
-			"id": 1091,
+			"id": 1090,
 			"since": 42,
 			"type": "Boolean",
 			"cardinality": "One",
@@ -105,18 +106,9 @@ export const _TypeModel: TypeModel = {
 			"final": false,
 			"encrypted": true
 		},
-		"organizer": {
-			"name": "organizer",
-			"id": 1089,
-			"since": 42,
-			"type": "String",
-			"cardinality": "ZeroOrOne",
-			"final": true,
-			"encrypted": true
-		},
 		"sequence": {
 			"name": "sequence",
-			"id": 1090,
+			"id": 1089,
 			"since": 42,
 			"type": "Number",
 			"cardinality": "One",
@@ -154,11 +146,20 @@ export const _TypeModel: TypeModel = {
 	"associations": {
 		"attendees": {
 			"name": "attendees",
-			"id": 1092,
+			"id": 1091,
 			"since": 42,
 			"type": "AGGREGATION",
 			"cardinality": "Any",
 			"refType": "CalendarEventAttendee",
+			"final": false
+		},
+		"organizer": {
+			"name": "organizer",
+			"id": 1092,
+			"since": 42,
+			"type": "AGGREGATION",
+			"cardinality": "ZeroOrOne",
+			"refType": "EncryptedMailAddress",
 			"final": false
 		},
 		"repeatRule": {
@@ -203,13 +204,13 @@ export type CalendarEvent = {
 	hashedUid: ?Uint8Array;
 	isCopy: boolean;
 	location: string;
-	organizer: ?string;
 	sequence: NumberString;
 	startTime: Date;
 	summary: string;
 	uid: ?string;
 
 	attendees: CalendarEventAttendee[];
+	organizer: ?EncryptedMailAddress;
 	repeatRule: ?CalendarRepeatRule;
 	alarmInfos: IdTuple[];
 }

@@ -457,7 +457,10 @@ export function parseCalendarEvents(icalObject: ICalObject, zone: string): Parse
 		event.attendees = attendees
 		const organizerProp = eventObj.properties.find(p => p.name === "ORGANIZER")
 		if (organizerProp && organizerProp.value.startsWith("mailto:")) {
-			event.organizer = organizerProp.value.substring("mailto:".length)
+			event.organizer = createEncryptedMailAddress({
+				address: organizerProp.value.substring("mailto:".length),
+				name: organizerProp.params["name"],
+			})
 		}
 
 		event.uid = getPropStringValue(eventObj, "UID")

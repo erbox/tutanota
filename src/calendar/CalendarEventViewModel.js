@@ -17,7 +17,7 @@ import type {AlarmInfo} from "../api/entities/sys/AlarmInfo"
 import {createAlarmInfo} from "../api/entities/sys/AlarmInfo"
 import type {MailboxDetail} from "../mail/MailModel"
 import stream from "mithril/stream/stream.js"
-import {getDefaultSenderFromUser, getEnabledMailAddressesWithUser} from "../mail/MailUtils"
+import {getDefaultSenderFromUser, getEnabledMailAddressesWithUser, getSenderNameForUser} from "../mail/MailUtils"
 import {
 	createRepeatRuleWithValues,
 	filterInt,
@@ -76,11 +76,11 @@ export class CalendarEventViewModel {
 	+allDay: Stream<boolean>;
 	repeat: ?{frequency: RepeatPeriodEnum, interval: number, endType: EndTypeEnum, endValue: number}
 	+attendees: Array<CalendarEventAttendee>;
-	organizer: ?string;
-	+possibleOrganizers: $ReadOnlyArray<string>;
+	organizer: ?EncryptedMailAddress;
+	+possibleOrganizers: $ReadOnlyArray<EncryptedMailAddress>;
 	+location: Stream<string>;
 	note: string;
-	+amPmFormat: bool;
+	+amPmFormat: boolean;
 	+existingEvent: ?CalendarEvent
 	_oldStartTime: ?string;
 	+readOnly: boolean;
@@ -112,7 +112,7 @@ export class CalendarEventViewModel {
 		// TODO: check if it's okay to clone here regarding hidden fields
 		this.attendees = existingEvent && existingEvent.attendees.map(clone) || []
 		const existingOrganizer = existingEvent && existingEvent.organizer
-		this.organizer = existingOrganizer || getDefaultSenderFromUser(userController)
+		this.organizer = existingOrganizer || addressToMailAddress(getDefaultSenderFromUser(userController), mailboxDetail, userController)
 		this.location = stream("")
 		this.note = ""
 		this.allDay = stream(true)
@@ -172,9 +172,9 @@ export class CalendarEventViewModel {
 
 		this.possibleOrganizers = existingOrganizer && !this.canModifyOrganizer()
 			? [existingOrganizer]
-			: existingOrganizer && !this._mailAddresses.includes(existingOrganizer)
-				? [existingOrganizer].concat(this._mailAddresses)
-				: this._mailAddresses
+			: existingOrganizer && !this._mailAddresses.includes(existingOrganizer.address)
+				? [existingOrganizer].concat(this._ownPossibleOrganizers(mailboxDetail, userController))
+				: this._ownPossibleOrganizers(mailboxDetail, userController)
 
 		if (existingEvent) {
 			this.summary(existingEvent.summary)
@@ -227,6 +227,10 @@ export class CalendarEventViewModel {
 			this.endDate = getStartOfDayWithZone(date, this._zone)
 			m.redraw()
 		}
+	}
+
+	_ownPossibleOrganizers(mailboxDetail: MailboxDetail, userController: IUserController): Array<EncryptedMailAddress> {
+		return this._mailAddresses.map((address) => addressToMailAddress(address, mailboxDetail, userController))
 	}
 
 	findOwnAttendee(): ?CalendarEventAttendee {
@@ -388,9 +392,9 @@ export class CalendarEventViewModel {
 					&& this._mailAddresses.includes(this.existingEvent.attendees[0].address.address)))
 	}
 
-	setOrganizer(mailAddress: string): void {
+	setOrganizer(newOrganizer: EncryptedMailAddress): void {
 		if (this.canModifyOrganizer()) {
-			this.organizer = mailAddress
+			this.organizer = newOrganizer
 		}
 	}
 
@@ -407,7 +411,7 @@ export class CalendarEventViewModel {
 				!this.existingEvent.isCopy
 				&& (
 					this.existingEvent.organizer == null ||
-					this._mailAddresses.includes(this.existingEvent.organizer)
+					this._mailAddresses.includes(this.existingEvent.organizer.address)
 				)
 			)
 		)
@@ -619,6 +623,13 @@ export class CalendarEventViewModel {
 	_distributionAddresses(guests: Array<CalendarEventAttendee>): Array<EncryptedMailAddress> {
 		return guests.map((a) => a.address)
 	}
+}
+
+function addressToMailAddress(address: string, mailboxDetail: MailboxDetail, userController: IUserController): EncryptedMailAddress {
+	return createEncryptedMailAddress({
+		address,
+		name: getSenderNameForUser(mailboxDetail, userController)
+	})
 }
 
 function createCalendarAlarm(identifier: string, trigger: string): AlarmInfo {

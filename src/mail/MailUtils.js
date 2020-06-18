@@ -405,10 +405,16 @@ export function showDeleteConfirmationDialog(mails: Mail[]): Promise<boolean> {
 	}
 }
 
+
+/** @deprecated use {@link getSenderNameForUser} instead */
 export function getSenderName(mailboxDetails: MailboxDetail): string {
+	return getSenderNameForUser(mailboxDetails, logins.getUserController())
+}
+
+export function getSenderNameForUser(mailboxDetails: MailboxDetail, userController: IUserController): string {
 	if (isUserMailbox(mailboxDetails)) {
 		// external users do not have access to the user group info
-		return logins.getUserController().userGroupInfo.name
+		return userController.userGroupInfo.name
 	} else {
 		return mailboxDetails.mailGroupInfo ? mailboxDetails.mailGroupInfo.name : ""
 	}

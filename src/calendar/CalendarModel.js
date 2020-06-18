@@ -523,7 +523,7 @@ export class CalendarModelImpl implements CalendarModel {
 			return this._worker.getEventByUid(uid).then((dbEvent) => {
 				if (dbEvent) {
 					// then it's an update
-					if (dbEvent.organizer !== sender) {
+					if (dbEvent.organizer == null || dbEvent.organizer.address !== sender) {
 						console.log("REQUEST sent not by organizer, ignoring")
 						return
 					}
@@ -551,7 +551,7 @@ export class CalendarModelImpl implements CalendarModel {
 		} else if (calendarData.method === CalendarMethod.CANCEL) {
 			return this._worker.getEventByUid(uid).then((dbEvent) => {
 				if (dbEvent != null) {
-					if (dbEvent.organizer !== sender) {
+					if (dbEvent.organizer == null || dbEvent.organizer.address !== sender) {
 						console.log("CANCEL sent not by organizer, ignoring")
 						return
 					}

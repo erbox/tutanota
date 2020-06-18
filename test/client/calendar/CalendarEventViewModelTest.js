@@ -29,7 +29,8 @@ import {createMailAddressAlias} from "../../../src/api/entities/sys/MailAddressA
 const calendarGroupId = "0"
 const now = new Date(2020, 4, 25, 13, 40)
 const zone = "Europe/Berlin"
-const mailAddress = "address@tutanota.com"
+const wrapIntoMailAddress = (address) => createEncryptedMailAddress({address})
+const mailAddress = wrapIntoMailAddress("address@tutanota.com")
 const userId = "12356"
 
 o.spec("CalendarEventViewModel", function () {
@@ -82,7 +83,7 @@ o.spec("CalendarEventViewModel", function () {
 			summary: "existing event",
 			startTime: new Date(2020, 4, 26, 12),
 			endTime: new Date(2020, 4, 26, 13),
-			organizer: "another-user@provider.com",
+			organizer: wrapIntoMailAddress("another-user@provider.com"),
 			_ownerGroup: calendarGroupId,
 			isCopy: true,
 			attendees: [
@@ -90,7 +91,7 @@ o.spec("CalendarEventViewModel", function () {
 					address: createEncryptedMailAddress({address: "attendee@example.com"})
 				}),
 				createCalendarEventAttendee({
-					address: createEncryptedMailAddress({address: mailAddress})
+					address: mailAddress
 				})
 			]
 		})
@@ -108,12 +109,12 @@ o.spec("CalendarEventViewModel", function () {
 			summary: "existing event",
 			startTime: new Date(2020, 4, 26, 12),
 			endTime: new Date(2020, 4, 26, 13),
-			organizer: "another-user@provider.com",
+			organizer: wrapIntoMailAddress("another-user@provider.com"),
 			_ownerGroup: null,
 			isCopy: true,
 			attendees: [
 				createCalendarEventAttendee({
-					address: createEncryptedMailAddress({address: mailAddress}),
+					address: mailAddress,
 					status: CalendarAttendeeStatus.ACCEPTED,
 				})
 			]
@@ -135,7 +136,7 @@ o.spec("CalendarEventViewModel", function () {
 			summary: "existing event",
 			startTime: new Date(2020, 4, 26, 12),
 			endTime: new Date(2020, 4, 26, 13),
-			organizer: "another-user@provider.com",
+			organizer: wrapIntoMailAddress("another-user@provider.com"),
 			_ownerGroup: calendarGroupId,
 		})
 		const viewModel = init({calendars, existingEvent, userController})
@@ -154,7 +155,7 @@ o.spec("CalendarEventViewModel", function () {
 			summary: "existing event",
 			startTime: new Date(2020, 4, 26, 12),
 			endTime: new Date(2020, 4, 26, 13),
-			organizer: "another-user@provider.com",
+			organizer: wrapIntoMailAddress("another-user@provider.com"),
 			_ownerGroup: calendarGroupId,
 			isCopy: true,
 		})
@@ -189,7 +190,7 @@ o.spec("CalendarEventViewModel", function () {
 			summary: "existing event",
 			startTime: new Date(2020, 4, 26, 12),
 			endTime: new Date(2020, 4, 26, 13),
-			organizer: "another-user@provider.com",
+			organizer: wrapIntoMailAddress("another-user@provider.com"),
 			_ownerGroup: calendarGroupId,
 			attendees: [
 				createCalendarEventAttendee({
@@ -210,7 +211,7 @@ o.spec("CalendarEventViewModel", function () {
 			const calendars = makeCalendars("own")
 			const distributor = makeDistributor()
 			const attendee = makeAttendee()
-			const ownAttendee = makeAttendee(mailAddress)
+			const ownAttendee = makeAttendee(mailAddress.address)
 			const calendarModel = makeCalendarModel()
 			const existingEvent = createCalendarEvent({
 				_id: ["listid", "calendarid"],
@@ -258,7 +259,7 @@ o.spec("CalendarEventViewModel", function () {
 			const existingEvent = createCalendarEvent({
 				_id: ["listid", "calendarid"],
 				_ownerGroup: calendarGroupId,
-				organizer: "another-address@example.com",
+				organizer: wrapIntoMailAddress("another-address@example.com"),
 				attendees: [attendee],
 				isCopy: true,
 			})
@@ -461,7 +462,7 @@ o.spec("CalendarEventViewModel", function () {
 			const calendarModel = makeCalendarModel()
 			const distributor = makeDistributor()
 			const ownAttendee = createCalendarEventAttendee({
-				address: createEncryptedMailAddress({address: mailAddress}),
+				address: mailAddress,
 				status: CalendarAttendeeStatus.NEEDS_ACTION,
 			})
 			const anotherAttendee = createCalendarEventAttendee({
@@ -471,7 +472,7 @@ o.spec("CalendarEventViewModel", function () {
 			const existingEvent = createCalendarEvent({
 				startTime: new Date(2020, 5, 1),
 				endTime: new Date(2020, 5, 2),
-				organizer: "another-address@example.com",
+				organizer: wrapIntoMailAddress("another-address@example.com"),
 				attendees: [ownAttendee, anotherAttendee],
 				isCopy: true,
 			})
@@ -517,7 +518,7 @@ o.spec("CalendarEventViewModel", function () {
 			const viewModel = init({calendars, existingEvent: null, calendarModel, distributor})
 			const newGuest = "new-attendee@example.com"
 			viewModel.addAttendee(newGuest)
-			viewModel.addAttendee(mailAddress)
+			viewModel.addAttendee(mailAddress.address)
 
 			o(await viewModel.onOkPressed()).deepEquals({status: "ok", askForUpdates: null})
 			o(calendarModel.createEvent.calls.length).equals(1)("created event")
@@ -529,7 +530,7 @@ o.spec("CalendarEventViewModel", function () {
 			const calendars = makeCalendars("own")
 			const distributor = makeDistributor()
 			const ownAttendee = createCalendarEventAttendee({
-				address: createEncryptedMailAddress({address: mailAddress}),
+				address: mailAddress,
 				status: CalendarAttendeeStatus.NEEDS_ACTION,
 			})
 			const anotherAttendee = createCalendarEventAttendee({
@@ -541,7 +542,7 @@ o.spec("CalendarEventViewModel", function () {
 			const existingEvent = createCalendarEvent({
 				startTime: new Date(2020, 5, 1),
 				endTime: new Date(2020, 5, 2),
-				organizer: alias,
+				organizer: wrapIntoMailAddress(alias),
 				attendees: [ownAttendee, anotherAttendee],
 			})
 			const viewModel = init({calendars, distributor, userController, existingEvent})
@@ -565,12 +566,12 @@ o.spec("CalendarEventViewModel", function () {
 			const existingEvent = createCalendarEvent({
 				startTime: new Date(2020, 5, 1),
 				endTime: new Date(2020, 5, 2),
-				organizer: alias,
+				organizer: wrapIntoMailAddress(alias),
 				attendees: [anotherAttendee],
 			})
 			const viewModel = init({calendars, distributor, userController, existingEvent})
 
-			viewModel.addAttendee(mailAddress)
+			viewModel.addAttendee(mailAddress.address)
 			const result = await viewModel.onOkPressed()
 
 			// Update is asked because there's another attendee
@@ -584,7 +585,7 @@ o.spec("CalendarEventViewModel", function () {
 			const calendars = makeCalendars("own")
 			const distributor = makeDistributor()
 			const ownAttendee = createCalendarEventAttendee({
-				address: createEncryptedMailAddress({address: mailAddress}),
+				address: mailAddress,
 				status: CalendarAttendeeStatus.NEEDS_ACTION,
 			})
 			const alias = "alias@tutanota.com"
@@ -592,7 +593,7 @@ o.spec("CalendarEventViewModel", function () {
 			const existingEvent = createCalendarEvent({
 				startTime: new Date(2020, 5, 1),
 				endTime: new Date(2020, 5, 2),
-				organizer: alias,
+				organizer: wrapIntoMailAddress(alias),
 				attendees: [ownAttendee],
 			})
 			const viewModel = init({calendars, distributor, userController, existingEvent})
@@ -606,7 +607,7 @@ o.spec("CalendarEventViewModel", function () {
 			const calendarModel = makeCalendarModel()
 			const existingEvent = createCalendarEvent({
 				_id: ["listId", "eventId"],
-				organizer: "organizer@tutanota.de",
+				organizer: wrapIntoMailAddress("organizer@tutanota.de"),
 				startTime: DateTime.utc(2020, 6, 11).toJSDate(),
 				endTime: DateTime.utc(2020, 7, 12).toJSDate(),
 				attendees: [
@@ -667,7 +668,7 @@ o.spec("CalendarEventViewModel", function () {
 
 			o(viewModel.attendees).deepEquals([
 				createCalendarEventAttendee({
-					address: createEncryptedMailAddress({address: mailAddress}),
+					address: mailAddress,
 					status: CalendarAttendeeStatus.ACCEPTED,
 				}),
 				createCalendarEventAttendee({
@@ -687,7 +688,7 @@ o.spec("CalendarEventViewModel", function () {
 
 			o(viewModel.attendees).deepEquals([
 				createCalendarEventAttendee({
-					address: createEncryptedMailAddress({address: mailAddress}),
+					address: mailAddress,
 					status: CalendarAttendeeStatus.ACCEPTED,
 				}),
 				createCalendarEventAttendee({
@@ -731,7 +732,7 @@ o.spec("CalendarEventViewModel", function () {
 			viewModel.selectGoing(CalendarAttendeeStatus.ACCEPTED)
 
 			o(viewModel.attendees[0]).deepEquals(createCalendarEventAttendee({
-				address: createEncryptedMailAddress({address: mailAddress}),
+				address: mailAddress,
 				status: CalendarAttendeeStatus.ACCEPTED,
 			}))
 			o(viewModel.attendees[1]).deepEquals(attendee)
@@ -743,7 +744,7 @@ o.spec("CalendarEventViewModel", function () {
 				address: createEncryptedMailAddress({address: "guest@example.com"})
 			})
 			const ownAttendee = createCalendarEventAttendee({
-				address: createEncryptedMailAddress({address: mailAddress})
+				address: mailAddress,
 			})
 			const existingEvent = createCalendarEvent({
 				attendees: [attendee, ownAttendee]
@@ -767,11 +768,11 @@ o.spec("CalendarEventViewModel", function () {
 				address: createEncryptedMailAddress({address: "guest@example.com"})
 			})
 			const ownAttendee = createCalendarEventAttendee({
-				address: createEncryptedMailAddress({address: mailAddress})
+				address: mailAddress
 			})
 			const existingEvent = createCalendarEvent({
 				attendees: [attendee, ownAttendee],
-				organizer: "organizer@example.com",
+				organizer: createEncryptedMailAddress({address: "organizer@example.com"}),
 				isCopy: true,
 			})
 			const viewModel = init({calendars, existingEvent})
@@ -947,7 +948,7 @@ function makeUserController(aliases: Array<string> = []): IUserController {
 		},
 		userGroupInfo: createGroupInfo({
 			mailAddressAliases: aliases.map((address) => createMailAddressAlias({mailAddress: address, enabled: true})),
-			mailAddress: mailAddress,
+			mailAddress: mailAddress.address,
 		}),
 		userSettingsGroupRoot: {
 			timeFormat: TimeFormat.TWENTY_FOUR_HOURS,

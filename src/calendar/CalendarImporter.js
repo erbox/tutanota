@@ -304,7 +304,7 @@ function serializeParticipants(event: CalendarEvent): Array<string> {
 	}
 
 	const lines = []
-	organizer && lines.push(`ORGANIZER;CN=${organizer}:mailto:${organizer}`)
+	organizer && lines.push(`ORGANIZER;CN=${organizer.name}:mailto:${organizer.address}`)
 	const attendeesProperties = attendees.map(({address, status}) =>
 		`ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARSTAT=${calendarAttendeeStatusToParstat[status]}`
 		+ `;RSVP=TRUE;CN=${address.name}:mailto:${address.address}`)

@@ -139,11 +139,11 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 		const attendeesExpanded = stream(viewModel.attendees.length > 0)
 
 		const renderInviting = (): Children => viewModel.canModifyGuests() ? m(".mt-negative-m", m(attendeesField)) : null
-
 		function renderAttendees() {
 			const ownAttendee = viewModel.findOwnAttendee()
 			const renderGuest = a => {
-				const isOrganizer = a.address.address === viewModel.organizer
+				const {organizer} = viewModel
+				const isOrganizer = organizer && a.address.address === organizer.address
 				return m(".flex.mt", {
 					style: {height: px(size.button_height), borderBottom: "1px transparent"},
 				}, [
@@ -166,15 +166,15 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 								label: "edit_action",
 								type: ButtonType.Secondary,
 								click: createDropdown(() => {
-									return viewModel.possibleOrganizers.map((address) => {
+									return viewModel.possibleOrganizers.map((organizer) => {
 											return {
-												label: () => address,
-												click: () => viewModel.setOrganizer(address),
+												label: () => organizer.address,
+												click: () => viewModel.setOrganizer(organizer),
 												type: ButtonType.Dropdown
 											}
 										}
 									)
-								})
+								}, 300)
 							}))
 							: null,
 						!isOrganizer && viewModel.canModifyGuests()
@@ -190,17 +190,6 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 			}
 			return m("", viewModel.attendees.map(renderGuest))
 		}
-
-		function renderOrganizer(): Children {
-			return m(DropDownSelectorN, {
-				label: "organizer_label",
-				items: viewModel.possibleOrganizers.map((address) => ({name: address, value: address})),
-				selectedValue: stream(viewModel.organizer || null),
-				dropdownWidth: 300,
-				disabled: !viewModel.canModifyOrganizer(),
-			})
-		}
-
 
 		function renderAttendeeConfirmBanner(): Children {
 			if (!viewModel.existingEvent || !viewModel.existingEvent.isCopy) {

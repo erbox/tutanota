@@ -12,6 +12,7 @@ import type {MailAddress} from "../api/entities/tutanota/MailAddress"
 import type {File as TutanotaFile} from "../api/entities/tutanota/File"
 import {stringToUtf8Uint8Array, uint8ArrayToBase64} from "../api/common/utils/Encoding"
 import {theme} from "../gui/theme"
+import {assertNotNull} from "../api/common/utils/Utils"
 
 export interface CalendarUpdateDistributor {
 	sendInvite(existingEvent: CalendarEvent, recipients: $ReadOnlyArray<EncryptedMailAddress>): Promise<void>;
@@ -88,7 +89,7 @@ export class CalendarMailDistributor implements CalendarUpdateDistributor {
 		return this._mailModel.getUserMailboxDetails().then((mailboxDetails) => {
 			const editor = new MailEditor(mailboxDetails)
 			const message = lang.get("repliedToEventInvite_msg", {"{sender}": sender.name || sender.address, "{event}": event.summary})
-			editor.initWithTemplate({to: [{name: "", address: organizer}]},
+			editor.initWithTemplate({to: [{name: organizer.name || "", address: organizer.address}]},
 				message,
 				makeResponseEmailBody(event, message, sender, status), false)
 			const responseFile = makeInvitationCalendarFile(event, CalendarMethod.REPLY, new Date(), getTimeZone())
@@ -108,12 +109,13 @@ function sendCalendarFile(editor: MailEditor, responseFile: DataFile, method: Ca
 }
 
 function organizerLine(event: CalendarEvent) {
+	const {organizer} = event
 	// If organizer is already in the attendees, we don't have to add them separately.
-	if (event.attendees.find((a) => a.address.address === event.organizer)) {
+	if (organizer && event.attendees.find((a) => a.address.address === organizer.address)) {
 		return ""
 	}
 	return `<div style="display: flex"><div style="min-width: 80px">${lang.get("who_label")}:</div><div>${
-		event.organizer ? `${event.organizer} (${lang.get("organizer_label")})` : ""}</div></div>`
+		organizer ? `${organizer.name || ""} ${organizer.address} </EXTERNAL_FRAGMENT> (${lang.get("organizer_label")})` : ""}</div></div>`
 }
 
 function whenLine(event: CalendarEvent): string {
@@ -122,7 +124,7 @@ function whenLine(event: CalendarEvent): string {
 }
 
 function organizerLabel(event, a) {
-	return event.organizer === a.address.address ? `(${lang.get("organizer_label")})` : ""
+	return assertNotNull(event.organizer) === a.address.address ? `(${lang.get("organizer_label")})` : ""
 }
 
 function makeInviteEmailBody(event: CalendarEvent, message: string) {

@@ -849,7 +849,7 @@ o.spec("CalendarModel", function () {
 				summary: "v1",
 				sequence: "1",
 				uid,
-				organizer: sender,
+				organizer: createEncryptedMailAddress({address: sender}),
 				alarmInfos: [[alarmsListId, alarm._id]]
 			})
 			workerMock.eventByUid.set(uid, existingEvent)
@@ -861,7 +861,7 @@ o.spec("CalendarModel", function () {
 				summary: "v2",
 				uid,
 				sequence: "2",
-				organizer: sender,
+				organizer: createEncryptedMailAddress({address: sender}),
 			})
 			await model.processCalendarUpdate(sender, {
 				method: CalendarMethod.REQUEST,
@@ -891,7 +891,7 @@ o.spec("CalendarModel", function () {
 				summary: "v1",
 				sequence: "1",
 				uid,
-				organizer: sender,
+				organizer: createEncryptedMailAddress({address: sender}),
 				startTime: DateTime.fromObject({year: 2020, month: 5, day: 10, zone: "UTC"}).toJSDate(),
 				alarmInfos: [[alarmsListId, alarm._id]]
 			})
@@ -905,7 +905,7 @@ o.spec("CalendarModel", function () {
 				uid,
 				sequence: "2",
 				startTime: DateTime.fromObject({year: 2020, month: 5, day: 11, zone: "UTC"}).toJSDate(),
-				organizer: sender,
+				organizer: createEncryptedMailAddress({address: sender}),
 			})
 			await model.processCalendarUpdate(sender, {
 				method: CalendarMethod.REQUEST,
@@ -933,7 +933,7 @@ o.spec("CalendarModel", function () {
 					_ownerGroup: groupRoot._id,
 					sequence: "1",
 					uid,
-					organizer: sender,
+					organizer: createEncryptedMailAddress({address: sender}),
 				})
 				workerMock.addListInstances(existingEvent)
 				workerMock.eventByUid.set(uid, existingEvent)
@@ -941,7 +941,7 @@ o.spec("CalendarModel", function () {
 				const workerClient = makeWorkerClient(workerMock)
 				const model = new CalendarModelImpl(makeNotifications(), eventController, workerClient, userController)
 
-				const sentEvent = createCalendarEvent({uid, sequence: "2", organizer: sender})
+				const sentEvent = createCalendarEvent({uid, sequence: "2", organizer: createEncryptedMailAddress({address: sender})})
 				await model.processCalendarUpdate(sender, {
 					method: CalendarMethod.CANCEL,
 					contents: [
@@ -961,7 +961,7 @@ o.spec("CalendarModel", function () {
 					_ownerGroup: groupRoot._id,
 					sequence: "1",
 					uid,
-					organizer: sender,
+					organizer: createEncryptedMailAddress({address: sender}),
 				})
 				workerMock.addListInstances(existingEvent)
 				workerMock.eventByUid.set(uid, existingEvent)
@@ -969,7 +969,7 @@ o.spec("CalendarModel", function () {
 				const workerClient = makeWorkerClient(workerMock)
 				const model = new CalendarModelImpl(makeNotifications(), eventController, workerClient, userController)
 
-				const sentEvent = createCalendarEvent({uid, sequence: "2", organizer: sender})
+				const sentEvent = createCalendarEvent({uid, sequence: "2", organizer: createEncryptedMailAddress({address: sender})})
 				await model.processCalendarUpdate("another-sender", {
 					method: CalendarMethod.CANCEL,
 					contents: [{event: sentEvent, alarms: []}]
