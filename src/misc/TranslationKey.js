@@ -1115,3 +1115,4 @@ export type TranslationKeyType =
 	| "eventCopy_msg"
 	| "deleteEventConfirmation_msg"
 	| "addGuest_label"
+	| "eventYourDecision_msg"

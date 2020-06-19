@@ -397,6 +397,7 @@ styles.registerStyle('main', () => {
 		'.items-start': {'align-items': 'flex-start'},
 		'.items-base': {'align-items': 'baseline'},
 		'.items-stretch': {'align-items': 'stretch'},
+		'.align-self-start': {'align-self': 'start'},
 		'.align-self-center': {'align-self': 'center'},
 		'.align-self-end': {'align-self': 'flex-end'},
 		'.align-self-stretch': {'align-self': 'stretch'},

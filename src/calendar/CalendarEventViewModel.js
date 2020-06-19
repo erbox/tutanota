@@ -30,6 +30,7 @@ import {
 	getStartOfDayWithZone,
 	getStartOfNextDayWithZone,
 	hasCapabilityOnGroup,
+	incrementSequence,
 	parseTime,
 	timeString,
 	timeStringFromParts,
@@ -637,9 +638,4 @@ function createCalendarAlarm(identifier: string, trigger: string): AlarmInfo {
 	calendarAlarmInfo.alarmIdentifier = identifier
 	calendarAlarmInfo.trigger = trigger
 	return calendarAlarmInfo
-}
-
-function incrementSequence(sequence: string): string {
-	const current = filterInt(sequence) || 0
-	return String(current + 1)
 }

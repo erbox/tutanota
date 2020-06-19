@@ -86,7 +86,7 @@ function getColors(type: BannerTypeEnum): Colors {
 	if (type === BannerType.Warning) {
 		return {bg: "#ca0606", fg: "white", button: "white", border: "none"}
 	} else {
-		return {bg: "transparent", fg: theme.content_fg, button: theme.content_button, border: `2px solid ${theme.content_border}`}
+		return {bg: theme.content_bg, fg: theme.content_fg, button: theme.content_button, border: `2px solid ${theme.content_border}`}
 	}
 }
 
@@ -95,4 +95,27 @@ type Colors = {
 	fg: string,
 	border: string,
 	button: string,
+}
+
+type BannerButtonAttrs = {
+	borderColor: string,
+	color: string,
+	click: () => mixed,
+	text: string
+}
+
+export class BannerButton implements MComponent<BannerButtonAttrs> {
+	view({attrs}: Vnode<BannerButtonAttrs>): Children {
+		return m("button.border-radius.mr-s.center", {
+			style: {
+				border: `2px solid ${attrs.borderColor}`,
+				background: "transparent",
+				color: attrs.color,
+				width: "min-content",
+				padding: px(size.hpad_button),
+				minWidth: "60px",
+			},
+			onclick: attrs.click,
+		}, attrs.text)
+	}
 }

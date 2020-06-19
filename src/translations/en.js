@@ -1128,5 +1128,6 @@ module.exports = {
 		"eventCopy_msg": "This event was sent from another calendar. Changes will only be visible in your copy of the event",
 		"deleteEventConfirmation_msg": "Are you sure you want to delete this event?",
 		"addGuest_label": "Add a guest",
+		"eventYourDecision_msg": "You replied to this invite. Your decision: {decision}"
 	}
 }

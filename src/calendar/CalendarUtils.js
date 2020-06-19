@@ -606,9 +606,7 @@ export function calendarAttendeeStatusDescription(status: CalendarAttendeeStatus
 	}
 }
 
-export function copyEvent(event: CalendarEvent, updatedFields: $Shape<CalendarEvent>) {
-	const newEvent: CalendarEvent = Object.assign({}, event, updatedFields)
-	newEvent._ownerEncSessionKey = null
-	downcast(newEvent)._permissions = null
-	return newEvent
+export function incrementSequence(sequence: string): string {
+	const current = filterInt(sequence) || 0
+	return String(current + 1)
 }

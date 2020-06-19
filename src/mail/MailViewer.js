@@ -100,7 +100,7 @@ import {ButtonColors, ButtonN, ButtonType} from "../gui/base/ButtonN"
 import {styles} from "../gui/styles"
 import {worker} from "../api/main/WorkerClient"
 import {CALENDAR_MIME_TYPE} from "../calendar/CalendarUtils"
-import {showEventDetailsFromFile} from "../calendar/CalendarInvites"
+import {eventDetailsForFile} from "../calendar/CalendarInvites"
 import {createAsyncDropdown, createDropdown} from "../gui/base/DropdownN"
 import {navButtonRoutes} from "../misc/RouteChange"
 import {createEmailSenderListElement} from "../api/entities/sys/EmailSenderListElement"
@@ -114,6 +114,8 @@ import {_TypeModel as MailTypeModel} from "../api/entities/tutanota/Mail"
 import {copyToClipboard} from "../misc/ClipboardUtils"
 import type {GroupInfo} from "../api/entities/sys/GroupInfo"
 import {locator} from "../api/main/MainLocator"
+import type {CalendarEvent} from "../api/entities/tutanota/CalendarEvent"
+import {EventBanner} from "./EventBanner"
 
 assertMainOrNode()
 
@@ -161,6 +163,7 @@ export class MailViewer {
 	_lastTouchStart: {x: number, y: number, time: number};
 	_domForScrolling: ?HTMLElement
 	_warningDismissed: boolean;
+	_event: ?{event: CalendarEvent, recipient: string};
 
 	constructor(mail: Mail, showFolder: boolean) {
 		if (isDesktop()) {
@@ -302,6 +305,9 @@ export class MailViewer {
 										buttons: [{text: lang.get("close_alt"), click: () => this._warningDismissed = true}]
 									})
 									: null,
+							this._event
+								? m(EventBanner, this._event)
+								: null,
 							this._renderAttachments(),
 							m("hr.hr.mb.mt-s"),
 						]),
@@ -809,7 +815,6 @@ export class MailViewer {
 		})
 	}
 
-
 	_loadAttachments(mail: Mail): Promise<InlineImages> {
 		if (mail.attachments.length === 0) {
 			this._loadingAttachments = false
@@ -818,6 +823,16 @@ export class MailViewer {
 			this._loadingAttachments = true
 			return Promise.map(mail.attachments, fileId => load(FileTypeRef, fileId))
 			              .then(files => {
+				              const calendarFile = files.find(a => a.mimeType && a.mimeType.startsWith(CALENDAR_MIME_TYPE))
+				              if (calendarFile) {
+					              Promise.all([
+						              eventDetailsForFile(calendarFile),
+						              this._getSenderOfResponseMail(),
+					              ]).then(([event, recipient]) => {
+						              this._event = event && {event, recipient}
+						              m.redraw()
+					              })
+				              }
 				              this._attachments = files
 				              return this._inlineFileIds.then((inlineCids) => {
 					              this._attachmentButtons = this._createAttachmentsButtons(files, inlineCids)
@@ -853,7 +868,6 @@ export class MailViewer {
 			])
 		} else {
 			const spoilerLimit = this._attachmentsSpoilerLimit()
-			const firstCalendarFile = this._attachments.find(a => a.mimeType && a.mimeType.startsWith(CALENDAR_MIME_TYPE))
 			return m(".flex.ml-negative-bubble.flex-wrap",
 				[
 					this._attachmentButtons.length > spoilerLimit
@@ -872,15 +886,6 @@ export class MailViewer {
 							}, this._attachmentButtons.slice(spoilerLimit).map(m))
 						]
 						: this._attachmentButtons.map(m),
-					firstCalendarFile
-						? m(ButtonN, {
-							label: "viewEvent_action",
-							type: ButtonType.Secondary,
-							click: () => {
-								showEventDetailsFromFile(firstCalendarFile)
-							}
-						})
-						: null,
 					this._renderDownloadAllButton()
 				]
 			)
