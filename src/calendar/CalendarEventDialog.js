@@ -141,23 +141,27 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 		const renderInviting = (): Children => viewModel.canModifyGuests() ? m(".mt-negative-m", m(attendeesField)) : null
 		function renderAttendees() {
 			const ownAttendee = viewModel.findOwnAttendee()
-			const renderGuest = a => {
+			const renderGuest = (guest, index) => {
 				const {organizer} = viewModel
-				const isOrganizer = organizer && a.address.address === organizer.address
-				return m(".flex.mt", {
-					style: {height: px(size.button_height), borderBottom: "1px transparent"},
+				const isOrganizer = organizer && guest.address.address === organizer.address
+				return m(".flex", {
+					style: {
+						height: px(size.button_height),
+						borderBottom: "1px transparent",
+						marginTop: index === 0 ? 0 : px(size.vpad),
+					},
 				}, [
 					m(".flex.col.flex-grow.overflow-hidden.flex-no-grow-shrink-auto", [
-						m(".small", lang.get(isOrganizer ? "organizer_label" : "guest_label")),
-						m(".flex.flex-grow.items-center",
+						m(".flex.flex-grow.items-center" + (guest === ownAttendee ? ".b" : ""),
 							[
 
 								m("div.text-ellipsis", {style: {lineHeight: px(24)}},
-									a.address.name ? `${a.address.name} ${a.address.address}` : a.address.address
+									guest.address.name ? `${guest.address.name} ${guest.address.address}` : guest.address.address
 								),
 
 							]
 						),
+						m(".small", lang.get(isOrganizer ? "organizer_label" : "guest_label")),
 					]),
 					m(".flex-grow"),
 					[
@@ -181,10 +185,10 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 							? m(".mr-s-flex-grow", m(ButtonN, {
 								label: "remove_action",
 								type: ButtonType.Secondary,
-								click: () => viewModel.removeAttendee(a.address.address)
+								click: () => viewModel.removeAttendee(guest.address.address)
 							}))
 							: null,
-						renderStatusIcon(viewModel, a, ownAttendee)
+						renderStatusIcon(viewModel, guest, ownAttendee)
 					]
 				])
 			}
