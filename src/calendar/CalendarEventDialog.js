@@ -144,6 +144,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 		const attendeesExpanded = stream(viewModel.attendees.length > 0)
 
 		const renderInviting = (): Children => viewModel.canModifyGuests() ? m(".mt-negative-m", m(attendeesField)) : null
+
 		function renderAttendees() {
 			const ownAttendee = viewModel.findOwnAttendee()
 			const renderGuest = (guest, index) => {
@@ -153,7 +154,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 					style: {
 						height: px(size.button_height),
 						borderBottom: "1px transparent",
-						marginTop: index === 0 ? 0 : px(size.vpad),
+						marginTop: index === 0 && !viewModel.canModifyGuests() ? 0 : px(size.vpad),
 					},
 				}, [
 					m(".flex.col.flex-grow.overflow-hidden.flex-no-grow-shrink-auto", [
