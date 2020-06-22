@@ -493,7 +493,7 @@ o.spec("CalendarEventViewModel", function () {
 			o(distributor.sendInvite.calls).deepEquals([])
 			o(distributor.sendCancellation.calls).deepEquals([])
 			const [_, sentSender, sentStatus] = distributor.sendResponse.calls[0].args
-			o(sentSender.address).equals(mailAddress)
+			o(sentSender.address).equals(mailAddress.address)
 			o(sentStatus).equals(CalendarAttendeeStatus.ACCEPTED)
 		})
 
