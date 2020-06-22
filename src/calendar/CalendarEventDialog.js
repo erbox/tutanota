@@ -41,7 +41,7 @@ const iconForStatus = {
 	[CalendarAttendeeStatus.ACCEPTED]: Icons.Checkmark,
 	[CalendarAttendeeStatus.TENTATIVE]: BootIcons.Help,
 	[CalendarAttendeeStatus.DECLINED]: Icons.Cancel,
-	[CalendarAttendeeStatus.NEEDS_ACTION]: null
+	[CalendarAttendeeStatus.NEEDS_ACTION]: Icons.Time,
 }
 
 const alarmIntervalItems = [
