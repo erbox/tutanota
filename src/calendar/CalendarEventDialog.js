@@ -112,7 +112,12 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 			.setValue(viewModel.note)
 
 		const okAction = (dialog) => {
-			viewModel.changeDescription(descriptionEditor.getValue())
+			const description = descriptionEditor.getValue()
+			if (description === "<div><br></div>") {
+				viewModel.changeDescription("")
+			} else {
+				viewModel.changeDescription(description)
+			}
 			viewModel.onOkPressed().then((result) => {
 				if (result.status === "ok") {
 					const {askForUpdates} = result

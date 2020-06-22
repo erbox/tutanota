@@ -38,7 +38,7 @@ import {showCalendarEventDialog} from "./CalendarEventDialog"
 import {worker} from "../api/main/WorkerClient"
 import type {ButtonAttrs} from "../gui/base/ButtonN"
 import {ButtonColors, ButtonN, ButtonType} from "../gui/base/ButtonN"
-import {addDaysForEvent, addDaysForLongEvent, addDaysForRecurringEvent, loadCalendarInfos} from "./CalendarModel"
+import {addDaysForEvent, addDaysForLongEvent, addDaysForRecurringEvent} from "./CalendarModel"
 import {findAllAndRemove, findAndRemove} from "../api/common/utils/ArrayUtils"
 import {formatDateWithWeekday, formatMonthWithFullYear} from "../misc/Formatter"
 import {NavButtonN} from "../gui/base/NavButtonN"
@@ -68,7 +68,7 @@ import {ReceivedGroupInvitationTypeRef} from "../api/entities/sys/ReceivedGroupI
 import type {Group} from "../api/entities/sys/Group"
 import type {UserSettingsGroupRoot} from "../api/entities/tutanota/UserSettingsGroupRoot"
 import {UserSettingsGroupRootTypeRef} from "../api/entities/tutanota/UserSettingsGroupRoot"
-import {getDisplayText} from "../mail/MailUtils"
+import {getDisplayText, getEnabledMailAddressesWithUser} from "../mail/MailUtils"
 import {UserGroupRootTypeRef} from "../api/entities/sys/UserGroupRoot"
 import {showInvitationDialog} from "./CalendarInvitationDialog"
 import {loadGroupMembers} from "./CalendarSharingUtils"
@@ -80,6 +80,7 @@ import {LazyLoaded} from "../api/common/utils/LazyLoaded"
 import type {CalendarGroupRoot} from "../api/entities/tutanota/CalendarGroupRoot"
 import type {GroupInfo} from "../api/entities/sys/GroupInfo"
 import {GroupInfoTypeRef} from "../api/entities/sys/GroupInfo"
+import {CalendarEventPopup} from "./CalendarEventPopup"
 
 export const LIMIT_PAST_EVENTS_YEARS = 100
 export const DEFAULT_HOUR_OF_DAY = 6
@@ -177,7 +178,7 @@ export class CalendarView implements CurrentView {
 					case CalendarViewType.MONTH:
 						return m(CalendarMonthView, {
 							eventsForDays: this._eventsForDays,
-							onEventClicked: (event) => this._onEventSelected(event),
+							onEventClicked: (calendarEvent, domEvent) => this._onEventSelected(calendarEvent, domEvent),
 							onNewEvent: (date) => {
 								this._newEvent(date)
 							},
@@ -195,7 +196,7 @@ export class CalendarView implements CurrentView {
 					case CalendarViewType.DAY:
 						return m(CalendarDayView, {
 							eventsForDays: this._eventsForDays,
-							onEventClicked: (event) => this._onEventSelected(event),
+							onEventClicked: (event, domEvent) => this._onEventSelected(event, domEvent),
 							onNewEvent: (date) => {
 								this._newEvent(date)
 							},
@@ -211,7 +212,7 @@ export class CalendarView implements CurrentView {
 					case CalendarViewType.WEEK:
 						return m(CalendarWeekView, {
 							eventsForDays: this._eventsForDays,
-							onEventClicked: (event) => this._onEventSelected(event),
+							onEventClicked: (event, domEvent) => this._onEventSelected(event, domEvent),
 							onNewEvent: (date) => {
 								this._newEvent(date)
 							},
@@ -228,7 +229,7 @@ export class CalendarView implements CurrentView {
 						return m(CalendarAgendaView, {
 							eventsForDays: this._eventsForDays,
 							amPmFormat: shouldDefaultToAmPmTimeFormat(),
-							onEventClicked: (event) => this._onEventSelected(event),
+							onEventClicked: (event, domEvent) => this._onEventSelected(event, domEvent),
 							groupColors,
 							hiddenCalendars: this._hiddenCalendars,
 							onDateSelected: (date) => {
@@ -635,7 +636,30 @@ export class CalendarView implements CurrentView {
 		}, "save_action")
 	}
 
-	_onEventSelected(event: CalendarEvent) {
+	_onEventSelected(calendarEvent: CalendarEvent, domEvent: Event) {
+		if (!styles.isDesktopLayout()) {
+			this._editEvent(calendarEvent)
+		} else {
+			const domTarget = domEvent.currentTarget
+			if (domTarget == null || !(domTarget instanceof HTMLElement)) {
+				return
+			}
+			locator.mailModel.getUserMailboxDetails().then((mailboxDetails) => {
+					const addresses =
+						getEnabledMailAddressesWithUser(mailboxDetails, logins.getUserController().userGroupInfo)
+					const ownAttendee = calendarEvent.attendees.find((a) => addresses.includes(a.address.address))
+					new CalendarEventPopup(
+						calendarEvent,
+						ownAttendee,
+						domTarget.getBoundingClientRect(),
+						() => this._editEvent(calendarEvent)
+					).show()
+				}
+			)
+		}
+	}
+
+	_editEvent(event: CalendarEvent) {
 		Promise.all([this._calendarInfos, locator.mailModel.getUserMailboxDetails()])
 		       .then(([calendarInfos, mailboxDetails]) => {
 			       let p = Promise.resolve(event)
@@ -648,10 +672,6 @@ export class CalendarView implements CurrentView {
 				        console.log("calendar event not found when clicking on the event")
 			        })
 		       })
-	}
-
-	_getSelectedView(): CalendarViewTypeEnum {
-		return m.route.get().match("/calendar/month") ? CalendarViewType.MONTH : CalendarViewType.DAY
 	}
 
 	_loadMonthIfNeeded(dayInMonth: Date): Promise<void> {

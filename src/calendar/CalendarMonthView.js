@@ -40,13 +40,15 @@ type CalendarMonthAttrs = {
 	onDateSelected: (date: Date) => mixed,
 	eventsForDays: Map<number, Array<CalendarEvent>>,
 	onNewEvent: (date: ?Date) => mixed,
-	onEventClicked: (event: CalendarEvent) => mixed,
+	onEventClicked: (event: CalendarEvent, event: Event) => mixed,
 	onChangeMonth: (next: boolean) => mixed,
 	amPmFormat: boolean,
 	startOfTheWeek: WeekStartEnum,
 	groupColors: {[Id]: string},
 	hiddenCalendars: Set<Id>,
 }
+
+type SimplePosRest = {top: number, left: number, right: number}
 
 const dayHeight = () => styles.isDesktopLayout() ? 32 : 24
 const spaceBetweenEvents = () => styles.isDesktopLayout() ? 2 : 1
@@ -264,7 +266,7 @@ export class CalendarMonthView implements MComponent<CalendarMonthAttrs>, Lifecy
 		calendarDayWidth: number,
 		calendarDayHeight: number,
 		columnIndex: number,
-	): {top: number, left: number, right: number} {
+	): SimplePosRest {
 		const top = (size.calendar_line_height + spaceBetweenEvents()) * columnIndex + calendarDayHeight
 
 		const dayOfStartDateInWeek = getDiffInDaysFast(eventStart, firstDayOfWeek)
@@ -285,8 +287,8 @@ export class CalendarMonthView implements MComponent<CalendarMonthAttrs>, Lifecy
 			endsAfter: endsAfterWeek,
 			color: getEventColor(event, attrs.groupColors),
 			showTime: styles.isDesktopLayout() && !isAllDayEvent(event) ? EventTextTimeOption.START_TIME : EventTextTimeOption.NO_TIME,
-			onEventClicked: (e) => {
-				attrs.onEventClicked(event)
+			onEventClicked: (e, domEvent) => {
+				attrs.onEventClicked(event, domEvent)
 			},
 		})
 	}

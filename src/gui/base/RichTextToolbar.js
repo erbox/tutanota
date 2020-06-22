@@ -137,7 +137,7 @@ export class RichTextToolbar {
 		const removeFormattingButtonAttrs = {
 			label: "emptyString_msg",
 			title: "removeFormatting_action",
-			icon: () => Icons.Close,
+			icon: () => Icons.Cancel,
 			type: ButtonType.Toggle,
 			click: () => editor._squire.removeAllFormatting(),
 			noBubble: true,

@@ -19,7 +19,6 @@ import {
 } from "./CalendarUtils"
 import {CalendarDayEventsView, calendarDayTimes} from "./CalendarDayEventsView"
 import {neverNull} from "../api/common/utils/Utils"
-import {getFromMap} from "../api/common/utils/MapUtils"
 import {isAllDayEvent} from "../api/common/utils/CommonCalendarUtils"
 import {theme} from "../gui/theme"
 import {px, size} from "../gui/size"
@@ -38,7 +37,7 @@ export type Attrs = {
 	selectedDate: Date,
 	eventsForDays: Map<number, Array<CalendarEvent>>,
 	onNewEvent: (date: ?Date) => mixed,
-	onEventClicked: (event: CalendarEvent) => void,
+	onEventClicked: (event: CalendarEvent, domEvent: Event) => mixed,
 	groupColors: {[Id]: string},
 	hiddenCalendars: Set<Id>,
 	startOfTheWeek: WeekStartEnum,
