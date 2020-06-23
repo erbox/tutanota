@@ -1,7 +1,7 @@
 //@flow
 import {parseCalendarFile} from "./CalendarImporter"
 import {worker} from "../api/main/WorkerClient"
-import {showCalendarEventDialog} from "./CalendarEventDialog"
+import {showCalendarEventDialog} from "./CalendarEventEditDialog"
 import type {CalendarEvent} from "../api/entities/tutanota/CalendarEvent"
 import type {File as TutanotaFile} from "../api/entities/tutanota/File"
 import {loadCalendarInfos} from "./CalendarModel"

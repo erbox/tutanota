@@ -35,13 +35,12 @@ import {client} from "../misc/ClientDetector"
 import {locator} from "../api/main/MainLocator"
 import {CalendarEventViewModel} from "./CalendarEventViewModel"
 import {theme} from "../gui/theme"
-import {Banner, BannerType} from "../gui/base/Banner"
 
 const iconForStatus = {
 	[CalendarAttendeeStatus.ACCEPTED]: Icons.Checkmark,
 	[CalendarAttendeeStatus.TENTATIVE]: BootIcons.Help,
 	[CalendarAttendeeStatus.DECLINED]: Icons.Cancel,
-	[CalendarAttendeeStatus.NEEDS_ACTION]: Icons.Time,
+	[CalendarAttendeeStatus.NEEDS_ACTION]: Icons.Hourgralss,
 }
 
 const alarmIntervalItems = [
@@ -55,7 +54,6 @@ const alarmIntervalItems = [
 	{name: lang.get("calendarReminderIntervalThreeDays_label"), value: AlarmInterval.THREE_DAYS},
 	{name: lang.get("calendarReminderIntervalOneWeek_label"), value: AlarmInterval.ONE_WEEK}
 ]
-
 
 export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarInfo>, mailboxDetail: MailboxDetail,
                                         existingEvent?: CalendarEvent) {
@@ -147,6 +145,13 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 
 		function renderAttendees() {
 			const ownAttendee = viewModel.findOwnAttendee()
+			const guests = viewModel.attendees.slice()
+
+			if (ownAttendee) {
+				const indexOfOwn = guests.indexOf(ownAttendee)
+				guests.splice(indexOfOwn, 1)
+				guests.unshift(ownAttendee)
+			}
 			const renderGuest = (guest, index) => {
 				const {organizer} = viewModel
 				const isOrganizer = organizer && guest.address.address === organizer.address
@@ -158,16 +163,13 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 					},
 				}, [
 					m(".flex.col.flex-grow.overflow-hidden.flex-no-grow-shrink-auto", [
-						m(".flex.flex-grow.items-center" + (guest === ownAttendee ? ".b" : ""),
-							[
-
-								m("div.text-ellipsis", {style: {lineHeight: px(24)}},
-									guest.address.name ? `${guest.address.name} ${guest.address.address}` : guest.address.address
-								),
-
-							]
+						m(".flex.flex-grow.items-center",
+							m("div.text-ellipsis", {style: {lineHeight: px(24)}},
+								guest.address.name ? `${guest.address.name} ${guest.address.address}` : guest.address.address
+							),
 						),
-						m(".small", lang.get(isOrganizer ? "organizer_label" : "guest_label")),
+						m(".small", lang.get(isOrganizer ? "organizer_label" : "guest_label")
+							+ (guest === ownAttendee ? ` | ${lang.get("you_label")}` : "")),
 					]),
 					m(".flex-grow"),
 					[
@@ -198,37 +200,7 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 					]
 				])
 			}
-			return m("", viewModel.attendees.map(renderGuest))
-		}
-
-		function renderAttendeeConfirmBanner(): Children {
-			if (!viewModel.existingEvent || !viewModel.existingEvent.isCopy) {
-				return null
-			}
-			const ownAttendee = viewModel.findOwnAttendee()
-			if (!ownAttendee || ownAttendee.status !== CalendarAttendeeStatus.NEEDS_ACTION) {
-				return null
-			}
-			return m(Banner, {
-				type: BannerType.Info,
-				title: "",
-				message: lang.get("attendingEvent_label"),
-				icon: BootIcons.Calendar,
-				buttons: [
-					{
-						text: lang.get("yes_label"),
-						click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.ACCEPTED).then(() => dialog.close())
-					},
-					{
-						text: lang.get("maybe_label"),
-						click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.TENTATIVE).then(() => dialog.close())
-					},
-					{
-						text: lang.get("no_label"),
-						click: () => viewModel.replyGoingDirectly(CalendarAttendeeStatus.DECLINED).then(() => dialog.close())
-					}
-				]
-			})
+			return m("", guests.map(renderGuest))
 		}
 
 		const renderDateTimePickers = () => renderTwoColumnsIfFits(
@@ -355,7 +327,6 @@ export function showCalendarEventDialog(date: Date, calendars: Map<Id, CalendarI
 
 			return m(".calendar-edit-container.pb", [
 					renderHeading(),
-					renderAttendeeConfirmBanner(),
 					renderChangesMessage(),
 					renderDateTimePickers(),
 					m(".flex.items-center", [
@@ -476,9 +447,9 @@ function renderStatusIcon(viewModel: CalendarEventViewModel, attendee: CalendarE
 	const editable = ownAttendee === attendee && viewModel.canModifyOwnAttendance()
 
 	const selectors: SelectorItemList<CalendarAttendeeStatusEnum> = [
-		{name: "Yes", value: CalendarAttendeeStatus.ACCEPTED, icon: Icons.Checkmark},
-		{name: "Maybe", value: CalendarAttendeeStatus.TENTATIVE, icon: BootIcons.Help},
-		{name: "No", value: CalendarAttendeeStatus.DECLINED, icon: Icons.Cancel}
+		{name: "Yes", value: CalendarAttendeeStatus.ACCEPTED},
+		{name: "Maybe", value: CalendarAttendeeStatus.TENTATIVE},
+		{name: "No", value: CalendarAttendeeStatus.DECLINED},
 	]
 
 	const iconElement = icon

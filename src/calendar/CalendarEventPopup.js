@@ -10,26 +10,28 @@ import {Icons} from "../gui/base/icons/Icons"
 import {locator} from "../api/main/MainLocator"
 import type {ModalComponent} from "../gui/base/Modal"
 import {modal} from "../gui/base/Modal"
-import {CalendarPreviewView} from "./CalendarPreviewView"
+import {EventPreviewView} from "./EventPreviewView"
 import type {CalendarEvent} from "../api/entities/tutanota/CalendarEvent"
-import type {CalendarEventAttendee} from "../api/entities/tutanota/CalendarEventAttendee"
 import {Dialog} from "../gui/base/Dialog"
+import {styles} from "../gui/styles"
 
 export class CalendarEventPopup implements ModalComponent {
 	_calendarEvent: CalendarEvent;
-	_ownAttendee: ?CalendarEventAttendee;
 	_rect: ClientRect;
 	_onEditEvent: () => mixed;
 
-	constructor(calendarEvent: CalendarEvent, ownAttendee: ?CalendarEventAttendee, rect: ClientRect, onEditEvent: () => mixed) {
+	constructor(calendarEvent: CalendarEvent, rect: ClientRect, onEditEvent: () => mixed) {
 		this._calendarEvent = calendarEvent
-		this._ownAttendee = ownAttendee
 		this._rect = rect
 		this._onEditEvent = onEditEvent
 	}
 
 	show() {
-		modal.displayUnique(this, false)
+		if (styles.isDesktopLayout()) {
+			modal.displayUnique(this, false)
+		} else {
+			showMobileDialog({event: this._calendarEvent, onEditEvent: () => this._onEditEvent()})
+		}
 	}
 
 	view(vnode: Vnode<any>) {
@@ -84,9 +86,9 @@ export class CalendarEventPopup implements ModalComponent {
 						type: ButtonType.ActionLarge,
 						icon: () => Icons.Cancel,
 						colors: ButtonColors.DrawerNav,
-					})
+					}),
 				]),
-				m(CalendarPreviewView, {event: this._calendarEvent, ownAttendee: this._ownAttendee}),
+				m(EventPreviewView, {event: this._calendarEvent}),
 			],
 		)
 	}
@@ -109,4 +111,41 @@ export class CalendarEventPopup implements ModalComponent {
 	popState(e: Event): boolean {
 		return true
 	}
+}
+
+function showMobileDialog({event, onEditEvent}: {event: CalendarEvent, onEditEvent: () => mixed}) {
+	const dialog = Dialog.largeDialog({
+		left: [
+			{
+				label: "close_alt",
+				click: () => dialog.close(),
+				type: ButtonType.ActionLarge,
+				icon: () => Icons.Cancel,
+				colors: ButtonColors.DrawerNav,
+			},
+		],
+		right: [
+			{
+				label: "edit_action",
+				click: () => onEditEvent(),
+				type: ButtonType.ActionLarge,
+				icon: () => Icons.Edit,
+				colors: ButtonColors.DrawerNav,
+			}, {
+				label: "delete_action",
+				click: () => {
+					Dialog.confirm("deleteEventConfirmation_msg").then((confirmed) => {
+						if (confirmed) {
+							locator.calendarModel().deleteEvent(event)
+						}
+					})
+				},
+				type: ButtonType.ActionLarge,
+				icon: () => Icons.Trash,
+				colors: ButtonColors.DrawerNav,
+			}
+		]
+	}, {
+		view: () => m(".mt.pl-s.pr-s", m(EventPreviewView, {event}))
+	}).show()
 }

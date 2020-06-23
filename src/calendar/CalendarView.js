@@ -34,7 +34,7 @@ import {
 	isSameEvent,
 	shouldDefaultToAmPmTimeFormat,
 } from "./CalendarUtils"
-import {showCalendarEventDialog} from "./CalendarEventDialog"
+import {showCalendarEventDialog} from "./CalendarEventEditDialog"
 import {worker} from "../api/main/WorkerClient"
 import type {ButtonAttrs} from "../gui/base/ButtonN"
 import {ButtonColors, ButtonN, ButtonType} from "../gui/base/ButtonN"
@@ -637,26 +637,20 @@ export class CalendarView implements CurrentView {
 	}
 
 	_onEventSelected(calendarEvent: CalendarEvent, domEvent: Event) {
-		if (!styles.isDesktopLayout()) {
-			this._editEvent(calendarEvent)
-		} else {
-			const domTarget = domEvent.currentTarget
-			if (domTarget == null || !(domTarget instanceof HTMLElement)) {
-				return
-			}
-			locator.mailModel.getUserMailboxDetails().then((mailboxDetails) => {
-					const addresses =
-						getEnabledMailAddressesWithUser(mailboxDetails, logins.getUserController().userGroupInfo)
-					const ownAttendee = calendarEvent.attendees.find((a) => addresses.includes(a.address.address))
-					new CalendarEventPopup(
-						calendarEvent,
-						ownAttendee,
-						domTarget.getBoundingClientRect(),
-						() => this._editEvent(calendarEvent)
-					).show()
-				}
-			)
+		const domTarget = domEvent.currentTarget
+		if (domTarget == null || !(domTarget instanceof HTMLElement)) {
+			return
 		}
+		locator.mailModel.getUserMailboxDetails().then((mailboxDetails) => {
+				const addresses =
+					getEnabledMailAddressesWithUser(mailboxDetails, logins.getUserController().userGroupInfo)
+				new CalendarEventPopup(
+					calendarEvent,
+					domTarget.getBoundingClientRect(),
+					() => this._editEvent(calendarEvent)
+				).show()
+			}
+		)
 	}
 
 	_editEvent(event: CalendarEvent) {
