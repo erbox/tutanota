@@ -652,14 +652,14 @@ export function getAttendeeStatus(attendee: CalendarEventAttendee): CalendarAtte
 }
 
 export const CalendarMethod = Object.freeze({
-	PUBLISH: "0",
-	REQUEST: "1",
-	REPLY: "2",
-	ADD: "3",
-	CANCEL: "4",
-	REFRESH: "5",
-	COUNTER: "6",
-	DECLINECOUNTER: "7"
+	PUBLISH: "PUBLISH",
+	REQUEST: "REQUEST",
+	REPLY: "REPLY",
+	ADD: "ADD",
+	CANCEL: "CANCEL",
+	REFRESH: "REFRESH",
+	COUNTER: "COUNTER",
+	DECLINECOUNTER: "DECLINECOUNTER"
 })
 
 export type CalendarMethodEnum = $Values<typeof CalendarMethod>

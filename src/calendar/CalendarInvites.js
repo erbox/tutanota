@@ -37,8 +37,13 @@ export function showEventDetails(event: CalendarEvent) {
 	return Promise.all([
 		loadOrCreateCalendarInfo(),
 		locator.mailModel.getUserMailboxDetails(),
-	]).then(([calendarInfo, mailboxDetails]) => {
-		showCalendarEventDialog(event.startTime, calendarInfo, mailboxDetails, event)
+		event.uid && worker.getEventByUid(event.uid)
+	]).then(([calendarInfo, mailboxDetails, dbEvent]) => {
+		if (dbEvent) {
+			showCalendarEventDialog(dbEvent.startTime, calendarInfo, mailboxDetails, dbEvent || event)
+		} else {
+			showCalendarEventDialog(event.startTime, calendarInfo, mailboxDetails, event)
+		}
 	})
 }
 

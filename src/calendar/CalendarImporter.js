@@ -7,7 +7,7 @@ import {stringToUtf8Uint8Array, utf8Uint8ArrayToString} from "../api/common/util
 import {iCalReplacements, parseCalendarEvents, parseICalendar, tutaToIcalFrequency} from "./CalendarParser"
 import {generateEventElementId, isAllDayEvent} from "../api/common/utils/CommonCalendarUtils"
 import {worker} from "../api/main/WorkerClient"
-import {CALENDAR_MIME_TYPE, assignEventId, generateUid, getTimeZone} from "./CalendarUtils"
+import {assignEventId, CALENDAR_MIME_TYPE, generateUid, getTimeZone} from "./CalendarUtils"
 import {showProgressDialog} from "../gui/base/ProgressDialog"
 import {loadAll, loadMultiple} from "../api/main/Entity"
 import type {CalendarEvent} from "../api/entities/tutanota/CalendarEvent"
@@ -304,10 +304,15 @@ function serializeParticipants(event: CalendarEvent): Array<string> {
 	}
 
 	const lines = []
-	organizer && lines.push(`ORGANIZER;CN=${organizer.name}:mailto:${organizer.address}`)
-	const attendeesProperties = attendees.map(({address, status}) =>
-		`ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARSTAT=${calendarAttendeeStatusToParstat[status]}`
-		+ `;RSVP=TRUE;CN=${address.name}:mailto:${address.address}`)
+	if (organizer) {
+		const namePart = organizer.name ? `;CN=${organizer.name}` : ""
+		lines.push(`ORGANIZER;${namePart}:mailto:${organizer.address}`)
+	}
+	const attendeesProperties = attendees.map(({address, status}) => {
+		const namePart = address.name ? `;CN=${address.name}` : ""
+		return `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;PARSTAT=${calendarAttendeeStatusToParstat[status]}`
+			+ `;RSVP=TRUE${namePart}:mailto:${address.address}`
+	})
 	return lines.concat(attendeesProperties)
 }
 
