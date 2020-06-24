@@ -22,11 +22,11 @@ export const _TypeModel: TypeModel = {
 			"final": true,
 			"encrypted": false
 		},
-		"method": {
-			"name": "method",
+		"mailEncMethod": {
+			"name": "mailEncMethod",
 			"id": 1115,
 			"since": 42,
-			"type": "Number",
+			"type": "Bytes",
 			"cardinality": "One",
 			"final": true,
 			"encrypted": false
@@ -56,7 +56,7 @@ export type CalendarFileMethod = {
 	_type: TypeRef<CalendarFileMethod>;
 
 	_id: Id;
-	method: NumberString;
+	mailEncMethod: Uint8Array;
 
 	file: IdTuple;
 }

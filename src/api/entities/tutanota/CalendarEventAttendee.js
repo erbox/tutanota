@@ -30,7 +30,7 @@ export const _TypeModel: TypeModel = {
 			"type": "Number",
 			"cardinality": "One",
 			"final": false,
-			"encrypted": false
+			"encrypted": true
 		}
 	},
 	"associations": {
@@ -41,7 +41,7 @@ export const _TypeModel: TypeModel = {
 			"type": "AGGREGATION",
 			"cardinality": "One",
 			"refType": "EncryptedMailAddress",
-			"final": false
+			"final": true
 		}
 	},
 	"app": "tutanota",

@@ -59,7 +59,7 @@ export class CalendarMailDistributor implements CalendarUpdateDistributor {
 				address
 			}))
 			editor.initWithTemplate({bcc}, lang.get("eventUpdated_msg", {"{event}": event.summary}),
-				makeInviteEmailBody(event, ""))
+				makeInviteEmailBody(event, ""), false)
 
 			const file = makeInvitationCalendarFile(event, CalendarMethod.REQUEST, new Date(), getTimeZone())
 			sendCalendarFile(editor, file, CalendarMethod.REQUEST)
@@ -74,7 +74,7 @@ export class CalendarMailDistributor implements CalendarUpdateDistributor {
 				address
 			}))
 			const message = lang.get("eventCancelled_msg", {"{event}": event.summary})
-			editor.initWithTemplate({bcc}, message, makeInviteEmailBody(event, message))
+			editor.initWithTemplate({bcc}, message, makeInviteEmailBody(event, message), false)
 
 			const file = makeInvitationCalendarFile(event, CalendarMethod.CANCEL, new Date(), getTimeZone())
 			sendCalendarFile(editor, file, CalendarMethod.CANCEL)

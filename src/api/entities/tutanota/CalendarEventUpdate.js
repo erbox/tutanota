@@ -76,7 +76,7 @@ export const _TypeModel: TypeModel = {
 			"type": "LIST_ELEMENT_ASSOCIATION",
 			"cardinality": "One",
 			"refType": "File",
-			"final": false,
+			"final": true,
 			"external": false
 		}
 	},

@@ -10,10 +10,13 @@ import {createCreateMailFolderData} from "../../entities/tutanota/CreateMailFold
 import {createDraftCreateData} from "../../entities/tutanota/DraftCreateData"
 import {createDraftData} from "../../entities/tutanota/DraftData"
 import {DraftCreateReturnTypeRef} from "../../entities/tutanota/DraftCreateReturn"
+import type {Mail} from "../../entities/tutanota/Mail"
 import {_TypeModel as MailTypeModel, MailTypeRef} from "../../entities/tutanota/Mail"
+import type {DraftRecipient} from "../../entities/tutanota/DraftRecipient"
 import {createDraftRecipient} from "../../entities/tutanota/DraftRecipient"
 import {createDraftUpdateData} from "../../entities/tutanota/DraftUpdateData"
 import {DraftUpdateReturnTypeRef} from "../../entities/tutanota/DraftUpdateReturn"
+import type {SendDraftData} from "../../entities/tutanota/SendDraftData"
 import {createSendDraftData} from "../../entities/tutanota/SendDraftData"
 import {isExternalSecureRecipient, recipientInfoType} from "../../common/RecipientInfo"
 import {RecipientsNotFoundError} from "../../common/error/RecipientsNotFoundError"
@@ -25,6 +28,7 @@ import {GroupRootTypeRef} from "../../entities/sys/GroupRoot"
 import {containsId, getLetId, HttpMethod, isSameId, isSameTypeRefByAttr, stringToCustomId} from "../../common/EntityFunctions"
 import {ExternalUserReferenceTypeRef} from "../../entities/sys/ExternalUserReference"
 import {addressDomain, defer, getEnabledMailAddressesForGroupInfo, getUserGroupMemberships, neverNull} from "../../common/utils/Utils"
+import type {User} from "../../entities/sys/User"
 import {UserTypeRef} from "../../entities/sys/User"
 import {GroupTypeRef} from "../../entities/sys/Group"
 import {random} from "../crypto/Randomizer"
@@ -32,8 +36,10 @@ import {createExternalUserData} from "../../entities/tutanota/ExternalUserData"
 import {createCreateExternalUserGroupData} from "../../entities/tutanota/CreateExternalUserGroupData"
 import {createSecureExternalRecipientKeyData} from "../../entities/tutanota/SecureExternalRecipientKeyData"
 import {hash} from "../crypto/Sha256"
+import type {DraftAttachment} from "../../entities/tutanota/DraftAttachment"
 import {createDraftAttachment} from "../../entities/tutanota/DraftAttachment"
 import {createNewDraftAttachment} from "../../entities/tutanota/NewDraftAttachment"
+import type {File as TutanotaFile} from "../../entities/tutanota/File"
 import {_TypeModel as FileTypeModel, FileTypeRef} from "../../entities/tutanota/File"
 import type {FileFacade} from "./FileFacade"
 import {createAttachmentKeyData} from "../../entities/tutanota/AttachmentKeyData"
@@ -45,13 +51,7 @@ import {createEncryptedMailAddress} from "../../entities/tutanota/EncryptedMailA
 import {fileApp} from "../../../native/FileApp"
 import {encryptBucketKeyForInternalRecipient} from "./ReceipientKeyDataUtils"
 import murmurHash from "../crypto/lib/murmurhash3_32"
-import type {File as TutanotaFile} from "../../entities/tutanota/File"
-import type {Mail} from "../../entities/tutanota/Mail"
-import type {DraftRecipient} from "../../entities/tutanota/DraftRecipient"
-import type {DraftAttachment} from "../../entities/tutanota/DraftAttachment"
-import type {SendDraftData} from "../../entities/tutanota/SendDraftData"
 import type {EntityUpdate} from "../../entities/sys/EntityUpdate"
-import type {User} from "../../entities/sys/User"
 import {createCalendarFileMethod} from "../../entities/tutanota/CalendarFileMethod"
 
 assertWorkerOrNode()
@@ -268,7 +268,6 @@ export class MailFacade {
 				let service = createSendDraftData()
 				service.language = language
 				service.mail = draft._id
-				service.calendarMethods = calendarMethods.map(([file, method]) => createCalendarFileMethod({file, method}))
 
 				return Promise.each(draft.attachments, fileId => {
 					return load(FileTypeRef, fileId).then(file => {
@@ -290,6 +289,10 @@ export class MailFacade {
 						}),
 						resolveSessionKey(MailTypeModel, draft).then(mailSessionkey => {
 							let sk = neverNull(mailSessionkey)
+							service.calendarMethods = calendarMethods.map(([file, method]) => {
+								const mailEncMethod = encryptString(sk, method)
+								return createCalendarFileMethod({file, mailEncMethod})
+							})
 							if (draft.confidential) {
 								service.bucketEncMailSessionKey = encryptKey(bucketKey, sk)
 								if (recipientInfos.find(r => isExternalSecureRecipient(r)) != null) {

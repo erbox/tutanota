@@ -68,7 +68,7 @@ export const _TypeModel: TypeModel = {
 			"type": "AGGREGATION",
 			"cardinality": "ZeroOrOne",
 			"refType": "CalendarEventIndexRef",
-			"final": false
+			"final": true
 		},
 		"longEvents": {
 			"name": "longEvents",
