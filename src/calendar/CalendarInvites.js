@@ -11,6 +11,7 @@ import type {CalendarAttendeeStatusEnum} from "../api/common/TutanotaConstants"
 import {assertNotNull, clone} from "../api/common/utils/Utils"
 import {getTimeZone, incrementSequence} from "./CalendarUtils"
 import {createMailAddress} from "../api/entities/tutanota/MailAddress"
+import type {EncryptedMailAddress} from "../api/entities/tutanota/EncryptedMailAddress"
 
 function loadOrCreateCalendarInfo() {
 	return loadCalendarInfos()
@@ -76,11 +77,17 @@ export function replyToEventInvitation(
 		const eventClone = clone(event)
 		const foundAttendee = assertNotNull(eventClone.attendees.find((a) => a.address.address === attendee.address.address))
 		foundAttendee.status = decision
-		event.sequence = incrementSequence(event.sequence)
+		eventClone.sequence = incrementSequence(eventClone.sequence)
 		const address = createMailAddress({address: foundAttendee.address.address, name: foundAttendee.address.name})
-		return distributor.sendResponse(event, address, decision)
-		                  .then(() => locator.calendarModel().loadCalendarInfos())
+		return distributor.sendResponse(eventClone, address, decision)
+		                  .then(() => loadOrCreateCalendarInfo())
 		                  .then((calendarInfos) => Array.from(calendarInfos.values())[0])
 		                  .then((calendar) => locator.calendarModel().createEvent(eventClone, [], getTimeZone(), calendar.groupRoot))
 	})
+}
+
+export function getEventCancellationRecipients(event: CalendarEvent, ownAddresses: $ReadOnlyArray<string>): Array<EncryptedMailAddress> {
+	return event.attendees
+	            .filter(a => !ownAddresses.includes(a.address.address))
+	            .map(a => a.address)
 }

@@ -346,6 +346,7 @@ export interface CalendarModel {
 
 	loadAlarms(alarmInfos: Array<IdTuple>, user: User): Promise<Array<UserAlarmInfo>>;
 
+	/** Load map from group/groupRoot ID to the calendar info */
 	loadCalendarInfos(): Promise<Map<Id, CalendarInfo>>;
 }
 
@@ -457,7 +458,9 @@ export class CalendarModelImpl implements CalendarModel {
 	_processCalendarReplies() {
 		// TOOD: inject mailModel
 		return locator.mailModel.getUserMailboxDetails().then((mailboxDetails) => {
-			loadAll(CalendarEventUpdateTypeRef, assertNotNull(mailboxDetails.mailboxGroupRoot.calendarEventUpdates).list)
+			const {calendarEventUpdates} = mailboxDetails.mailboxGroupRoot
+			if (calendarEventUpdates == null) return
+			loadAll(CalendarEventUpdateTypeRef, calendarEventUpdates.list)
 				.then((invites) => {
 					return Promise.each(invites, (invite) => {
 						return this._handleCalendarEventUpdate(invite)
@@ -509,7 +512,7 @@ export class CalendarModelImpl implements CalendarModel {
 					return
 				}
 				dbAttendee.status = replyAttendee.status
-				console.log("updating event with reply status", updatedEvent.uid, updatedEvent._id)
+				console.log(`updating event with reply status, uid: ${String(updatedEvent.uid)}, id: ${JSON.stringify(updatedEvent._id)}, attendee: ${replyAttendee.address.address}, status: ${dbAttendee.status}`)
 
 				return Promise.all([
 					this.loadAlarms(dbEvent.alarmInfos, this._userController.user),
@@ -608,8 +611,12 @@ export class CalendarModelImpl implements CalendarModel {
 	}
 
 	loadAlarms(alarmInfos: Array<IdTuple>, user: User): Promise<Array<UserAlarmInfo>> {
+		const {alarmInfoList} = user
+		if (alarmInfoList == null) {
+			return Promise.resolve([])
+		}
 		const ids = alarmInfos
-			.filter((alarmInfoId) => isSameId(listIdPart(alarmInfoId), assertNotNull(user.alarmInfoList).alarms))
+			.filter((alarmInfoId) => isSameId(listIdPart(alarmInfoId), alarmInfoList.alarms))
 		if (ids.length === 0) {
 			return Promise.resolve([])
 		}

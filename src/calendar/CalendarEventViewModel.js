@@ -51,6 +51,7 @@ import type {CalendarUpdateDistributor} from "./CalendarUpdateDistributor"
 import type {IUserController} from "../api/main/UserController"
 import type {TranslationKeyType} from "../misc/TranslationKey"
 import {createMailAddress} from "../api/entities/tutanota/MailAddress"
+import {getEventCancellationRecipients} from "./CalendarInvites"
 
 const TIMESTAMP_ZERO_YEAR = 1970
 
@@ -427,9 +428,7 @@ export class CalendarEventViewModel {
 			const updatedEvent = clone(event)
 			updatedEvent.sequence = incrementSequence(updatedEvent.sequence)
 			const awaitCancellation = this._eventType === EventType.OWN && event.attendees.length
-				? this._distributor.sendCancellation(updatedEvent, event.attendees
-				                                                        .filter(a => !this._mailAddresses.includes(a.address.address))
-				                                                        .map(a => a.address))
+				? this._distributor.sendCancellation(updatedEvent, getEventCancellationRecipients(event, this._mailAddresses))
 				: Promise.resolve()
 			return awaitCancellation.then(() => this._calendarModel.deleteEvent(event)).catch(NotFoundError, noOp)
 		} else {

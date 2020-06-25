@@ -641,11 +641,15 @@ export class CalendarView implements CurrentView {
 		if (domTarget == null || !(domTarget instanceof HTMLElement)) {
 			return
 		}
-		locator.mailModel.getUserMailboxDetails().then((mailboxDetails) => {
+		Promise.all([
+			locator.mailModel.getUserMailboxDetails(),
+			this._calendarInfos
+		]).then(([mailboxDetails, calendarInfos]) => {
 				const addresses =
 					getEnabledMailAddressesWithUser(mailboxDetails, logins.getUserController().userGroupInfo)
 				new CalendarEventPopup(
 					calendarEvent,
+					calendarInfos,
 					domTarget.getBoundingClientRect(),
 					() => this._editEvent(calendarEvent)
 				).show()

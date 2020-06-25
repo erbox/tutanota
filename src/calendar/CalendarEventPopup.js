@@ -2,7 +2,7 @@
 import type {Shortcut} from "../misc/KeyManager"
 import m from "mithril"
 import {px} from "../gui/size"
-import {CALENDAR_EVENT_HEIGHT} from "./CalendarUtils"
+import {CALENDAR_EVENT_HEIGHT, hasCapabilityOnGroup} from "./CalendarUtils"
 import {animations, opacity, transform} from "../gui/animation/Animations"
 import {ease} from "../gui/animation/Easing"
 import {ButtonColors, ButtonN, ButtonType} from "../gui/base/ButtonN"
@@ -14,23 +14,38 @@ import {EventPreviewView} from "./EventPreviewView"
 import type {CalendarEvent} from "../api/entities/tutanota/CalendarEvent"
 import {Dialog} from "../gui/base/Dialog"
 import {styles} from "../gui/styles"
+import {getEnabledMailAddressesWithUser} from "../mail/MailUtils"
+import {logins} from "../api/main/LoginController"
+import {getEventCancellationRecipients} from "./CalendarInvites"
+import type {CalendarInfo} from "./CalendarView"
+import {ShareCapability} from "../api/common/TutanotaConstants"
 
 export class CalendarEventPopup implements ModalComponent {
 	_calendarEvent: CalendarEvent;
 	_rect: ClientRect;
+	_canEdit: boolean;
 	_onEditEvent: () => mixed;
 
-	constructor(calendarEvent: CalendarEvent, rect: ClientRect, onEditEvent: () => mixed) {
+	constructor(calendarEvent: CalendarEvent, calendars: Map<Id, CalendarInfo>, rect: ClientRect, onEditEvent: () => mixed) {
 		this._calendarEvent = calendarEvent
 		this._rect = rect
 		this._onEditEvent = onEditEvent
+		if (calendarEvent._ownerGroup == null) {
+			throw new Error("Tried to open popup with non-persistent calendar event")
+		}
+		const calendarInfo = calendars.get(calendarEvent._ownerGroup)
+		if (calendarInfo == null) {
+			throw new Error("Passed event from unknown calendar")
+		}
+		this._canEdit = !calendarInfo.shared
+			|| hasCapabilityOnGroup(logins.getUserController().user, calendarInfo.group, ShareCapability.Write)
 	}
 
 	show() {
 		if (styles.isDesktopLayout()) {
 			modal.displayUnique(this, false)
 		} else {
-			showMobileDialog({event: this._calendarEvent, onEditEvent: () => this._onEditEvent()})
+			showMobileDialog({event: this._calendarEvent, canEdit: this._canEdit, onEditEvent: () => this._onEditEvent()})
 		}
 	}
 
@@ -67,19 +82,15 @@ export class CalendarEventPopup implements ModalComponent {
 						icon: () => Icons.Edit,
 						colors: ButtonColors.DrawerNav,
 					}),
-					m(ButtonN, {
-						label: "delete_action",
-						click: () => {
-							Dialog.confirm("deleteEventConfirmation_msg").then((confirmed) => {
-								if (confirmed) {
-									locator.calendarModel().deleteEvent(this._calendarEvent)
-								}
-							})
-						},
-						type: ButtonType.ActionLarge,
-						icon: () => Icons.Trash,
-						colors: ButtonColors.DrawerNav,
-					}),
+					this._canEdit
+						? m(ButtonN, {
+							label: "delete_action",
+							click: () => deleteEvent(this._calendarEvent),
+							type: ButtonType.ActionLarge,
+							icon: () => Icons.Trash,
+							colors: ButtonColors.DrawerNav,
+						})
+						: null,
 					m(ButtonN, {
 						label: "close_alt",
 						click: () => modal.remove(this),
@@ -113,7 +124,7 @@ export class CalendarEventPopup implements ModalComponent {
 	}
 }
 
-function showMobileDialog({event, onEditEvent}: {event: CalendarEvent, onEditEvent: () => mixed}) {
+function showMobileDialog({event, onEditEvent, canEdit}: {event: CalendarEvent, canEdit: boolean, onEditEvent: () => mixed}) {
 	const dialog = Dialog.largeDialog({
 		left: [
 			{
@@ -131,21 +142,41 @@ function showMobileDialog({event, onEditEvent}: {event: CalendarEvent, onEditEve
 				type: ButtonType.ActionLarge,
 				icon: () => Icons.Edit,
 				colors: ButtonColors.DrawerNav,
-			}, {
+			}
+		].concat(canEdit ? {
 				label: "delete_action",
-				click: () => {
-					Dialog.confirm("deleteEventConfirmation_msg").then((confirmed) => {
-						if (confirmed) {
-							locator.calendarModel().deleteEvent(event)
-						}
-					})
-				},
+				click: () => deleteEvent(event),
 				type: ButtonType.ActionLarge,
 				icon: () => Icons.Trash,
 				colors: ButtonColors.DrawerNav,
 			}
-		]
+			: []
+		)
 	}, {
 		view: () => m(".mt.pl-s.pr-s", m(EventPreviewView, {event}))
 	}).show()
+}
+
+function sendCancellationIfNeeded(event) {
+	if (!event.isCopy) {
+		return Promise.all([
+			locator.calendarUpdateDistributor(),
+			locator.mailModel.getUserMailboxDetails()
+		]).then(([distributor, mailboxDetail]) => {
+			const mailAddreses = getEnabledMailAddressesWithUser(mailboxDetail, logins.getUserController().userGroupInfo)
+			const recipients = getEventCancellationRecipients(event, mailAddreses)
+			return distributor.sendCancellation(event, recipients)
+		})
+	} else {
+		return Promise.resolve()
+	}
+}
+
+function deleteEvent(event: CalendarEvent) {
+	Dialog.confirm("deleteEventConfirmation_msg").then((confirmed) => {
+		if (confirmed) {
+			sendCancellationIfNeeded(event)
+				.then(() => locator.calendarModel().deleteEvent(event))
+		}
+	})
 }

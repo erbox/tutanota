@@ -250,8 +250,8 @@ export class CalendarFacade {
 				// short-circuit if we find the thing
 				return acc || load(CalendarGroupRootTypeRef, membership.group)
 					.then((groupRoot) =>
-						load(CalendarEventUidIndexTypeRef, [
-							neverNull(groupRoot.index).list,
+						groupRoot.index && load(CalendarEventUidIndexTypeRef, [
+							groupRoot.index.list,
 							uint8arrayToCustomId(hashUid(uid))
 						]))
 					.catch(NotFoundError, () => null)
